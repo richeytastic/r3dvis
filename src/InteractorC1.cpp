@@ -17,6 +17,7 @@
 
 #include <InteractorC1.h>
 using r3dvis::InteractorC1;
+using r3dvis::KeyPresser;
 
 
 vtkStandardNewMacro( InteractorC1);

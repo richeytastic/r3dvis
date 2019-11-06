@@ -67,8 +67,8 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
     cvals->SetName( _label.c_str());
 
-    const int nf = model.numFaces();
-    const int nv = model.numVtxs();
+    const size_t nf = model.numFaces();
+    const size_t nv = model.numVtxs();
 
     if ( nd == 1)  // Scalars
     {
@@ -97,7 +97,7 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
             if ( !hasDups)
             {
                 cvals->SetNumberOfValues( nv);
-                for ( int vid = 0; vid < nv; ++vid)
+                for ( size_t vid = 0; vid < nv; ++vid)
                     cvals->SetValue( vid, val( vid, 0));    // One-to-one mapping
             }   // end if
             else
@@ -107,7 +107,7 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
                 std::unordered_map<int,float> vmap;
                 int i = 0;
                 cvals->SetNumberOfValues( 3*nf);
-                for ( int fid = 0; fid < nf; ++fid)
+                for ( size_t fid = 0; fid < nf; ++fid)
                 {
                     const int* fvidxs = model.fvidxs(fid);
                     for ( int j = 0; j < 3; ++j)
@@ -129,7 +129,7 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
         if ( _mapsPolys)
         {
             cvals->SetNumberOfTuples( nf);
-            for ( int fid = 0; fid < nf; ++fid)
+            for ( size_t fid = 0; fid < nf; ++fid)
             {
                 for ( size_t k = 0; k < nd; ++k)
                     mval[k] = val( fid, k);
@@ -143,7 +143,7 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
             if ( !hasDups)
             {
                 cvals->SetNumberOfTuples( nv);
-                for ( int vid = 0; vid < nv; ++vid)
+                for ( size_t vid = 0; vid < nv; ++vid)
                 {
                     for ( size_t k = 0; k < nd; ++k)
                         mval[k] = val( vid, k);
@@ -155,7 +155,7 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
                 std::unordered_map<int, std::vector<float> > vmap;
                 int i = 0;
                 cvals->SetNumberOfTuples( 3*nf);
-                for ( int fid = 0; fid < nf; ++fid)
+                for ( size_t fid = 0; fid < nf; ++fid)
                 {
                     const int* fvidxs = model.fvidxs(fid);
                     for ( int j = 0; j < 3; ++j)
