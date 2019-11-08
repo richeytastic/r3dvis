@@ -20,3 +20,5 @@ Visualise r3d::Mesh objects using VTK. Also provides some other high-level VTK s
   
   In addition, ensure that separate debug and release builds are compiled. When integrating with
   Qt, QApplication will whinge if mixing build types (app will fail to start).
+
+Download [libbuild](../../../libbuild) for easy build and install of this library.
