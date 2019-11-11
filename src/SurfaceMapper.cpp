@@ -114,6 +114,7 @@ vtkSmartPointer<vtkFloatArray> SurfaceMapper::makeArray( const Mesh& model, bool
                     const int vid = fvidxs[j];
                     if ( vmap.count(vid) == 0)
                     {
+                        vmap[vid].resize(nd);
                         for ( size_t k = 0; k < nd; ++k)
                             vmap[vid][k] = val( vid, k);
                     }   // end if
