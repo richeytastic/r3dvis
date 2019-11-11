@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,17 @@
 using r3dvis::LookupTable;
 
 
-// public
+vtkLookupTable* LookupTable::vtk( const vtkRenderer *ren)
+{
+    if ( _luts.count(ren) == 0)
+    {
+        _luts[ren] = vtkSmartPointer<vtkLookupTable>::New();
+        _luts[ren]->DeepCopy( _blut);
+    }   // end if
+    return _luts.at(ren);
+}   // end vtk
+
+
 void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, size_t nc)
 {
     const vtkColor3ub v0( c0[0], c0[1], c0[2]);
@@ -28,7 +38,6 @@ void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, size_t n
 }   // end setColours
 
 
-// public
 void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, const cv::Vec3b &c2, size_t nc0, size_t nc1)
 {
     const vtkColor3ub v0( c0[0], c0[1], c0[2]);
@@ -38,16 +47,13 @@ void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, const cv
 }   // end setColours
 
 
-// public
 void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, size_t ncols)
 {
     assert( ncols > 0);
     if ( ncols < 2)
         ncols = 2;
 
-    // Map lookup colours to the lookup table
-    _lut->SetNumberOfTableValues( (int)ncols);
-    _lut->Build();
+    _setNumTableValues( ncols);
 
     float cstep[3] = {0,0,0};
     if ( ncols > 1)
@@ -63,12 +69,13 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, 
         rgb[0] = (scol[0] + i*cstep[0])/255.0f;
         rgb[1] = (scol[1] + i*cstep[1])/255.0f;
         rgb[2] = (scol[2] + i*cstep[2])/255.0f;
-        _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
+        _updateValue( i, rgb);
     }   // end for
+
+    _buildTables();
 }   // end setColours
 
 
-// public
 void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, size_t ncols0, size_t ncols1)
 {
     assert( ncols0 > 0);
@@ -78,9 +85,8 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
         ncols0 = ncols0 - ncols1;
     }   // end if
 
-    const size_t totCols = ncols0 + ncols1;
-    _lut->SetNumberOfTableValues( (int)totCols);
-    _lut->Build();
+    const int totCols = int(ncols0 + ncols1);
+    _setNumTableValues( size_t(totCols));
 
     float cstep[3] = {0,0,0};
     if ( ncols0 > 1)
@@ -98,7 +104,7 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
         rgb[0] = (scol[0] + i*cstep[0])/255.0f;
         rgb[1] = (scol[1] + i*cstep[1])/255.0f;
         rgb[2] = (scol[2] + i*cstep[2])/255.0f;
-        _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
+        _updateValue( i, rgb);
     }   // end for
 
     cstep[0] = 0;
@@ -111,11 +117,37 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
         cstep[2] = (float(fcol[2]) - float(mcol[2]))/(ncols1-1);
     }   // end if
 
-    for ( size_t i = ncols0, j = 0; i < totCols; ++i, ++j)
+    for ( int i = ncols0, j = 0; i < totCols; ++i, ++j)
     {
         rgb[0] = (mcol[0] + j*cstep[0])/255.0f;
         rgb[1] = (mcol[1] + j*cstep[1])/255.0f;
         rgb[2] = (mcol[2] + j*cstep[2])/255.0f;
-        _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
+        _updateValue( i, rgb);
     }   // end for
+
+    _buildTables();
 }   // end setColours
+
+
+void LookupTable::_buildTables()
+{
+    _blut->Build();
+    for ( auto p : _luts)
+        p.second->Build();
+}   // end _buildTables
+
+
+void LookupTable::_updateValue( int i, const float rgb[3])
+{
+    _blut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
+    for ( auto p : _luts)
+        p.second->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
+}   // end _updateValue
+
+
+void LookupTable::_setNumTableValues( size_t ncols)
+{
+    _blut->SetNumberOfTableValues( (int)ncols);
+    for ( auto p : _luts)
+        p.second->SetNumberOfTableValues( (int)ncols);
+}   // end _setNumTableValues

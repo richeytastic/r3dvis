@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@
 #include "r3dvis_Export.h"
 #include <opencv2/opencv.hpp>
 #include <vtkLookupTable.h>
+#include <vtkRenderer.h>
 #include <vtkColor.h>
+#include <unordered_map>
 
 namespace r3dvis {
 
@@ -49,11 +51,17 @@ public:
                      const cv::Vec3b& maxCol,
                      size_t ncols0, size_t ncols1=0);
 
-    vtkLookupTable* vtk() { return _lut;}
-    const vtkLookupTable* vtk() const { return _lut;}
+    // Create and return a new lookup table for the given renderer
+    // if an existing one isn't present for the given renderer.
+    vtkLookupTable* vtk( const vtkRenderer*);
 
 private:
-    vtkNew<vtkLookupTable> _lut;
+    vtkNew<vtkLookupTable> _blut;
+    std::unordered_map<const vtkRenderer*, vtkSmartPointer<vtkLookupTable> > _luts;
+
+    void _setNumTableValues( size_t);
+    void _updateValue( int, const float[3]);
+    void _buildTables();
 };  // end class
 
 }   // end namespace

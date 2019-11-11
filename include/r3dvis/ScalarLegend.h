@@ -39,7 +39,7 @@ public:
     vtkTextProperty* labelProperty();
 
     void setTitle( const std::string&);
-    void setLookupTable( const vtkLookupTable*);
+    void setLookupTable( vtkLookupTable*);
 
     void setVisible( bool);
     bool isVisible() const;

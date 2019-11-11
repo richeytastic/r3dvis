@@ -21,6 +21,8 @@
 #include "r3dvis_Export.h"
 #include <r3d/Mesh.h>
 #include <vtkActor.h>
+#include <vtkSmartPointer.h>
+#include <vtkFloatArray.h>
 #include <functional>
 
 namespace r3dvis {
@@ -32,35 +34,27 @@ using MetricFn = std::function<float(int id, size_t k)>;
 class r3dvis_EXPORT SurfaceMapper
 {
 public:
-    // Supply the label that will be used to identify the mapped range in the vtkActor.
     // Set mapPolys to true to map polygons (default), false to map vertices.
     // Set dims to 1 for mapping scalars (default), higher values for mapping vectors.
     using CPtr = std::shared_ptr<const SurfaceMapper>;
-    static CPtr create( const std::string&, const MetricFn&, bool mapPolys=true, size_t dims=1);
+    static CPtr create( const MetricFn&, bool mapPolys=true, size_t dims=1);
 
-    inline const std::string& label() const { return _label;}
+    SurfaceMapper( const MetricFn&, bool mapPolys, size_t dims);
+
     inline bool mapsPolys() const { return _mapsPolys;}
     inline size_t ndimensions() const { return _ndims;}
 
-    // Map metrics array to the actor's data set attributes. Does NOT make the mapped array active!
-    // To activate the array for visualisation on the actor's polydata, get its dataset attributes using:
-    // da = polydata->GetCellData() (for polygon mapping), or
-    // da = polydata->GetPointData (for vertex mapping).
-    // Then, set the appropriate scalar or vector mapping using:
-    // da->SetActiveScalars( label().c_str()), or
-    // da->SetActiveVectors( label().c_str())
-    // For scalar mapping, ensure that the following are set as needed:
-    // actor->GetProperty()->SetRepresentationToSurface() (obviously)
-    // actor->GetMapper()->SetScalarModelToUseCellData() (may not be needed)
-    // actor->GetMapper()->SetScalarVisibility(true)
-    void mapMetrics( const r3d::Mesh&, vtkActor*) const;
+    // Make and return the array of metrics.
+    // If isTextureMapped == true then the actor is assumed to have 3*nfaces vertices.
+    // Note that the name of the returned array must be set before adding to an actor's
+    // cell or point data.
+    vtkSmartPointer<vtkFloatArray> makeArray( const r3d::Mesh&, bool isTextureMapped) const;
 
     // Get min/max for component c from last call to mapActor.
     float getMin( int c=0) const { return _min[c];}
     float getMax( int c=0) const { return _max[c];}
 
 private:
-    const std::string _label;
     MetricFn _metricfn;
     const bool _mapsPolys;
     const size_t _ndims;
@@ -68,8 +62,6 @@ private:
     mutable std::vector<float> _max;
     float val( int, size_t) const;
 
-    SurfaceMapper( const std::string&, const MetricFn&, bool mapPolys, size_t dims);
-    ~SurfaceMapper(){}
     SurfaceMapper( const SurfaceMapper&) = delete;
     void operator=( const SurfaceMapper&) = delete;
 };  // end class

@@ -16,11 +16,11 @@
  ************************************************************************/
 
 #include <ScalarLegend.h>
-using r3dvis::ScalarLegend;
 #include <vtkTextProperty.h>
 #include <vtkScalarBarActor.h>
 #include <iostream>
 #include <sstream>
+using r3dvis::ScalarLegend;
 
 
 ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
@@ -59,11 +59,10 @@ void ScalarLegend::setTitle( const std::string& title)
 }   // end setTitle
 
 
-void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
+void ScalarLegend::setLookupTable( vtkLookupTable* lut)
 {
-    vtkLookupTable* ltable = const_cast<vtkLookupTable*>(lut);
-    const double minv = ltable->GetTableRange()[0];
-    const double maxv = ltable->GetTableRange()[1];
+    const double minv = lut->GetTableRange()[0];
+    const double maxv = lut->GetTableRange()[1];
 
     const int maxWidth = 4;
     int ndecimals = std::max<int>(0, maxWidth - (int)(log(maxv - minv) + 1));
@@ -73,7 +72,7 @@ void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
     oss << "% " << maxWidth << "." << ndecimals << "f";
     vtkScalarBarActor* legend = _widget->GetScalarBarActor();
     legend->SetLabelFormat( oss.str().c_str());
-    legend->SetLookupTable( ltable);
+    legend->SetLookupTable( lut);
 }   // end setLookupTable
 
 

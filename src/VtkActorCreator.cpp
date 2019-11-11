@@ -72,10 +72,10 @@ vtkSmartPointer<vtkPoints> createVerts( const std::vector<Vec3f>& vtxs, vtkCellA
 vtkSmartPointer<vtkPoints> createSequenceVerts( const Mesh& model, vtkCellArray* vertices)
 {
     assert( model.hasSequentialVertexIds());
-    const size_t n = model.numVtxs();
+    const int n = int(model.numVtxs());
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     points->SetNumberOfPoints( n);
-    for ( size_t i = 0; i < n; ++i)
+    for ( int i = 0; i < n; ++i)
     {
         points->SetPoint( i, &model.uvtx( i)[0]);
         vertices->InsertNextCell(1);
@@ -311,10 +311,10 @@ namespace {
 vtkSmartPointer<vtkPoints> createSequencePoints( const Mesh& model)
 {
     assert( model.hasSequentialVertexIds());
-    const size_t n = model.numVtxs();
+    const int n = int(model.numVtxs());
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     points->SetNumberOfPoints( n);
-    for ( size_t i = 0; i < n; ++i)
+    for ( int i = 0; i < n; ++i)
         points->SetPoint( i, &model.uvtx( i)[0]);
     return points;
 }   // end createSequencePoints

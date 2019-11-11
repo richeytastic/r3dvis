@@ -19,8 +19,6 @@
 #include <VtkTools.h>
 using r3dvis::SurfaceMapper;
 using r3dvis::MetricFn;
-#include <vtkSmartPointer.h>
-#include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <vtkCellData.h>
 #include <climits>
@@ -28,14 +26,14 @@ using r3dvis::MetricFn;
 using r3d::Mesh;
 
 
-SurfaceMapper::CPtr SurfaceMapper::create( const std::string& label, const MetricFn& fn, bool mapPolys, size_t d)
+SurfaceMapper::CPtr SurfaceMapper::create( const MetricFn& fn, bool mapPolys, size_t d)
 {
-    return CPtr( new SurfaceMapper( label, fn, mapPolys, d), [](SurfaceMapper* x){ delete x;});
+    return CPtr( new SurfaceMapper( fn, mapPolys, d), [](SurfaceMapper* x){ delete x;});
 }   // end create
 
 
-SurfaceMapper::SurfaceMapper( const std::string& label, const MetricFn& fn, bool mapPolys, size_t d)
-    : _label(label), _metricfn(fn), _mapsPolys(mapPolys), _ndims(d) {}
+SurfaceMapper::SurfaceMapper( const MetricFn& fn, bool mapPolys, size_t d)
+    : _metricfn(fn), _mapsPolys(mapPolys), _ndims(d) {}
 
 
 // private
@@ -49,7 +47,7 @@ float SurfaceMapper::val( int id, size_t k) const
 
 
 // public
-void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
+vtkSmartPointer<vtkFloatArray> SurfaceMapper::makeArray( const Mesh& model, bool isTextureMapped) const
 {
     assert( model.hasSequentialIds());
     const size_t nd = ndimensions();
@@ -65,117 +63,65 @@ void SurfaceMapper::mapMetrics( const Mesh& model, vtkActor *actor) const
     }   // end for
 
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
-    cvals->SetName( _label.c_str());
+    //cvals->SetName( _label.c_str());
 
     const int nf = int(model.numFaces());
     const int nv = int(model.numVtxs());
 
-    if ( nd == 1)  // Scalars
+    std::vector<float> mval(nd);
+    cvals->SetNumberOfComponents( static_cast<int>(nd));
+    
+    if ( _mapsPolys)
     {
-        if ( _mapsPolys)
+        cvals->SetNumberOfTuples( nf);
+        for ( int fid = 0; fid < nf; ++fid)
         {
-            cvals->SetNumberOfValues( nf);
-            for ( int fid = 0; fid < nf; ++fid)
-                cvals->SetValue( fid, val( fid, 0));
-        }   // end if
-        else
-        {
-            // For vertex mapping, depending on how the actor's polydata have been created, there could be the
-            // same number of points as there are vertices in the model (if texture mapping was not done) or
-            // there could be three times the number of triangles (if texture mapping was done). In the first
-            // case, setting the value is a straight forward one-to-one mapping. However, in the second case,
-            // vertices that share faces will be duplicated and so each unique vertex metric value needs to
-            // be mapped to all of these duplicate corresponding points in the array.
-            const int np = r3dvis::getPolyData(actor)->GetPoints()->GetNumberOfPoints();
-            const bool hasDups = np == 3*nf;
-            /*
-            std::cerr << "numVtxs  = " << nv << std::endl;
-            std::cerr << "numFaces = " << nf << std::endl;
-            std::cerr << "3*NF     = " << 3*nf << std::endl;
-            */
-
-            if ( !hasDups)
-            {
-                cvals->SetNumberOfValues( nv);
-                for ( int vid = 0; vid < nv; ++vid)
-                    cvals->SetValue( vid, val( vid, 0));    // One-to-one mapping
-            }   // end if
-            else
-            {
-                // Map of vertex ids to their values for local caching since we don't want
-                // to ask the client to repeatedly calculate the same metric for a vertex.
-                std::unordered_map<int,float> vmap;
-                int i = 0;
-                cvals->SetNumberOfValues( 3*nf);
-                for ( int fid = 0; fid < nf; ++fid)
-                {
-                    const int* fvidxs = model.fvidxs(fid);
-                    for ( int j = 0; j < 3; ++j)
-                    {
-                        const int vid = fvidxs[j];
-                        if ( vmap.count(vid) == 0)
-                            vmap[vid] = val( vid, 0);
-                        cvals->SetValue( i++, vmap[vid]);
-                    }   // end for
-                }   // end for
-            }   // end else
-        }   // end else
+            for ( size_t k = 0; k < nd; ++k)
+                mval[k] = val( fid, k);
+            cvals->SetTuple( fid, &mval[0]);
+        }   // end for
     }   // end if
-    else    // Vectors
+    else
     {
-        std::vector<float> mval(nd);
-        cvals->SetNumberOfComponents( static_cast<int>(nd));
-        
-        if ( _mapsPolys)
+        // For vertex mapping, depending on how the actor's polydata have been created, there could be the
+        // same number of points as there are vertices in the model (if texture mapping was not done) or
+        // there could be three times the number of triangles (if texture mapping was done). In the first
+        // case, setting the value is a straight forward one-to-one mapping. However, in the second case,
+        // vertices that share faces will be duplicated and so each unique vertex metric value needs to
+        // be mapped to all of these duplicate corresponding points in the array.
+        if ( !isTextureMapped)
         {
-            cvals->SetNumberOfTuples( nf);
-            for ( int fid = 0; fid < nf; ++fid)
+            cvals->SetNumberOfTuples( nv);
+            for ( int vid = 0; vid < nv; ++vid)
             {
                 for ( size_t k = 0; k < nd; ++k)
-                    mval[k] = val( fid, k);
-                cvals->SetTuple( fid, &mval[0]);
+                    mval[k] = val( vid, k);
+                cvals->SetTuple( vid, &mval[0]);    // One-to-one mapping
             }   // end for
         }   // end if
         else
         {
-            const bool hasDups = r3dvis::getPolyData(actor)->GetPoints()->GetNumberOfPoints() == 3*nf;
-
-            if ( !hasDups)
+            // Map of vertex ids to their values for local caching since we don't want
+            // to ask the client to repeatedly calculate the same metric for a vertex.
+            std::unordered_map<int, std::vector<float> > vmap;
+            int i = 0;
+            cvals->SetNumberOfTuples( 3*nf);
+            for ( int fid = 0; fid < nf; ++fid)
             {
-                cvals->SetNumberOfTuples( nv);
-                for ( int vid = 0; vid < nv; ++vid)
+                const int* fvidxs = model.fvidxs(fid);
+                for ( int j = 0; j < 3; ++j)
                 {
-                    for ( size_t k = 0; k < nd; ++k)
-                        mval[k] = val( vid, k);
-                    cvals->SetTuple( vid, &mval[0]);
-                }   // end for
-            }   // end if
-            else
-            {
-                std::unordered_map<int, std::vector<float> > vmap;
-                int i = 0;
-                cvals->SetNumberOfTuples( 3*nf);
-                for ( int fid = 0; fid < nf; ++fid)
-                {
-                    const int* fvidxs = model.fvidxs(fid);
-                    for ( int j = 0; j < 3; ++j)
+                    const int vid = fvidxs[j];
+                    if ( vmap.count(vid) == 0)
                     {
-                        const int vid = fvidxs[j];
-                        if ( vmap.count(vid) == 0)
-                        {
-                            for ( size_t k = 0; k < nd; ++k)
-                                vmap[vid][k] = val( vid, k);
-                        }   // end if
-                        cvals->SetTuple( i++, &vmap[vid][0]);
-                    }   // end for
+                        for ( size_t k = 0; k < nd; ++k)
+                            vmap[vid][k] = val( vid, k);
+                    }   // end if
+                    cvals->SetTuple( i++, &vmap[vid][0]);
                 }   // end for
-            }   // end else
+            }   // end for
         }   // end else
     }   // end else
 
-    vtkPolyData* pd = r3dvis::getPolyData(actor);
-    if ( _mapsPolys)
-        pd->GetCellData()->AddArray(cvals);
-    else
-        pd->GetPointData()->AddArray(cvals);
-}   // end mapMetrics
+    return cvals;
+}   // end makeArray
