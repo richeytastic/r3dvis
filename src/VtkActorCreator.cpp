@@ -383,10 +383,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateActor( const Mesh& model)
     }   // end if
 
     if ( model.numMats() == 0)
-    {
-        std::cerr << "[INFO] r3dvis::VtkActorCreator::generateActor: Model has no materials; generating surface actor." << std::endl;
         return generateSurfaceActor( model);
-    }   // end if
 
     init();
 

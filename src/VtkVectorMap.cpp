@@ -29,6 +29,10 @@ VtkVectorMap::Ptr VtkVectorMap::create( vtkPolyData* inputData, bool useNormal)
 
 VtkVectorMap::VtkVectorMap( vtkPolyData* inputData, bool useNormal)
 {
+    _arrow->SetShaftRadius( 0.01);
+    _arrow->SetTipLength( 0.2);
+    _arrow->SetTipRadius( 0.04);
+
     _glyph->SetSourceConnection( _arrow->GetOutputPort());
     _glyph->SetInputData( inputData);
     _glyph->SetScaleFactor( 1.0);
@@ -49,7 +53,7 @@ VtkVectorMap::VtkVectorMap( vtkPolyData* inputData, bool useNormal)
     // Ambient lighting only
     vtkProperty* property = _actor->GetProperty();
     property->SetAmbient(1.0);
-    property->SetDiffuse(0.0);
+    property->SetDiffuse(1.0);
     property->SetSpecular(0.0);
 }   // end ctor
 
