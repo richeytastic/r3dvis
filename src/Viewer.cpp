@@ -47,12 +47,15 @@ void Viewer::clear() { _ren->RemoveAllViewProps();}	// end clear
 
 void Viewer::setCamera( const r3d::CameraParams& cp)
 {
+    const r3d::Vec3f& pos = cp.pos();
+    const r3d::Vec3f& foc = cp.focus();
+    const r3d::Vec3f& upv = cp.up();
 	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    cam->SetFocalPoint( cp.focus[0], cp.focus[1], cp.focus[2]);
-    cam->SetPosition( cp.pos[0], cp.pos[1], cp.pos[2]);
-    cam->SetViewUp( cp.up[0], cp.up[1], cp.up[2]);
+    cam->SetFocalPoint( foc[0], foc[1], foc[2]);
+    cam->SetPosition( pos[0], pos[1], pos[2]);
+    cam->SetViewUp( upv[0], upv[1], upv[2]);
     _ren->ResetCameraClippingRange();
-    cam->SetViewAngle( cp.fov);
+    cam->SetViewAngle( cp.fov());
 }   // end setCamera
 
 
@@ -104,17 +107,18 @@ void Viewer::resetClippingRange() { _ren->ResetCameraClippingRange();}
 
 r3d::CameraParams Viewer::camera() const
 {
-    r3d::CameraParams cp;
 	vtkCamera* cam = _ren->GetActiveCamera();
     double *arr = cam->GetPosition();
-    cp.pos = r3d::Vec3f( arr[0], arr[1], arr[2]);
+    const r3d::Vec3f pos = r3d::Vec3f( arr[0], arr[1], arr[2]);
+
     arr = cam->GetFocalPoint();
-    cp.focus = r3d::Vec3f( arr[0], arr[1], arr[2]);
+    const r3d::Vec3f foc = r3d::Vec3f( arr[0], arr[1], arr[2]);
+
     arr = cam->GetViewUp();
-    cp.up = r3d::Vec3f( arr[0], arr[1], arr[2]);
-    cp.up.normalize();  // Ensure normalized
-    cp.fov = cam->GetViewAngle();
-    return cp;
+    r3d::Vec3f upv = r3d::Vec3f( arr[0], arr[1], arr[2]);
+    upv.normalize();  // Ensure normalized
+
+    return r3d::CameraParams( pos, foc, upv, cam->GetViewAngle());
 }   // end camera
 
 
