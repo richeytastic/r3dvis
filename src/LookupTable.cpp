@@ -38,91 +38,72 @@ void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, size_t n
 }   // end setColours
 
 
-void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, const cv::Vec3b &c2, size_t nc0, size_t nc1)
+void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, const cv::Vec3b &c2, size_t nc)
 {
     const vtkColor3ub v0( c0[0], c0[1], c0[2]);
     const vtkColor3ub v1( c1[0], c1[1], c1[2]);
     const vtkColor3ub v2( c2[0], c2[1], c2[2]);
-    setColours( v0, v1, v2, nc0, nc1);
+    setColours( v0, v1, v2, nc);
 }   // end setColours
 
 
 void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, size_t ncols)
 {
-    assert( ncols > 0);
-    if ( ncols < 2)
-        ncols = 2;
-
+    ncols = std::max<size_t>(2, ncols);
     _setNumTableValues( ncols);
 
-    float cstep[3] = {0,0,0};
-    if ( ncols > 1)
-    {
-        cstep[0] = (float(fcol[0]) - float(scol[0]))/(ncols-1);
-        cstep[1] = (float(fcol[1]) - float(scol[1]))/(ncols-1);
-        cstep[2] = (float(fcol[2]) - float(scol[2]))/(ncols-1);
-    }   // end if
+    const float stepProp = 1.0f/(ncols-1);
+    float cstep[3];
+    cstep[0] = stepProp * (float(fcol[0]) - float(scol[0]));
+    cstep[1] = stepProp * (float(fcol[1]) - float(scol[1]));
+    cstep[2] = stepProp * (float(fcol[2]) - float(scol[2]));
 
-    float rgb[3] = {0,0,0};
+    float rgb[3];
     for ( size_t i = 0; i < ncols; ++i)
     {
         rgb[0] = (scol[0] + i*cstep[0])/255.0f;
         rgb[1] = (scol[1] + i*cstep[1])/255.0f;
         rgb[2] = (scol[2] + i*cstep[2])/255.0f;
-        _updateValue( i, rgb);
+        _updateValue( int(i), rgb);
     }   // end for
 
     _buildTables();
 }   // end setColours
 
 
-void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, size_t ncols0, size_t ncols1)
+void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, size_t ncols)
 {
-    assert( ncols0 > 0);
-    if ( ncols1 == 0)
-    {
-        ncols1 = ncols0/2;
-        ncols0 = ncols0 - ncols1;
-    }   // end if
+    ncols = std::max<size_t>(2, ncols);
+    _setNumTableValues( ncols);
 
-    const int totCols = int(ncols0 + ncols1);
-    _setNumTableValues( size_t(totCols));
-
-    float cstep[3] = {0,0,0};
-    if ( ncols0 > 1)
-    {
-        cstep[0] = (float(mcol[0]) - float(scol[0]))/(ncols0-1);
-        cstep[1] = (float(mcol[1]) - float(scol[1]))/(ncols0-1);
-        cstep[2] = (float(mcol[2]) - float(scol[2]))/(ncols0-1);
-    }   // end if
-
-    float rgb[3] {0,0,0};
+    float rgb[3];
+    float cstep[3];
+    const float stepProp = 2.0f/(ncols-1);
+    const size_t hcols = size_t(float(ncols)/2);
 
     // First half
-    for ( size_t i = 0; i < ncols0; ++i)
+    cstep[0] = stepProp * (float(mcol[0]) - float(scol[0]));
+    cstep[1] = stepProp * (float(mcol[1]) - float(scol[1]));
+    cstep[2] = stepProp * (float(mcol[2]) - float(scol[2]));
+    for ( size_t i = 0; i < hcols; ++i)
     {
         rgb[0] = (scol[0] + i*cstep[0])/255.0f;
         rgb[1] = (scol[1] + i*cstep[1])/255.0f;
         rgb[2] = (scol[2] + i*cstep[2])/255.0f;
-        _updateValue( i, rgb);
+        _updateValue( int(i), rgb);
     }   // end for
 
-    cstep[0] = 0;
-    cstep[1] = 0;
-    cstep[2] = 0;
-    if ( ncols1 > 1)
-    {
-        cstep[0] = (float(fcol[0]) - float(mcol[0]))/(ncols1-1);
-        cstep[1] = (float(fcol[1]) - float(mcol[1]))/(ncols1-1);
-        cstep[2] = (float(fcol[2]) - float(mcol[2]))/(ncols1-1);
-    }   // end if
-
-    for ( int i = ncols0, j = 0; i < totCols; ++i, ++j)
+    // Second half
+    cstep[0] = stepProp * (float(fcol[0]) - float(mcol[0]));
+    cstep[1] = stepProp * (float(fcol[1]) - float(mcol[1]));
+    cstep[2] = stepProp * (float(fcol[2]) - float(mcol[2]));
+    int j = 0;
+    for ( size_t i = hcols; i < ncols; ++i, ++j)
     {
         rgb[0] = (mcol[0] + j*cstep[0])/255.0f;
         rgb[1] = (mcol[1] + j*cstep[1])/255.0f;
         rgb[2] = (mcol[2] + j*cstep[2])/255.0f;
-        _updateValue( i, rgb);
+        _updateValue( int(i), rgb);
     }   // end for
 
     _buildTables();

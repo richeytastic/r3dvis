@@ -37,19 +37,16 @@ public:
     void setColours( const cv::Vec3b& minCol, const cv::Vec3b& maxCol, size_t ncols);
 
     // Specify a colour midway between the start and end colours.
-    // If two values for the number of colours are used, ncols0 and ncols1,
-    // ncols0 specifies the number of colour values below the middle value
-    // and ncols1 specifies the number of colour values above the middle value.
     void setColours( const vtkColor3ub& minCol,  // Colour at min value
                      const vtkColor3ub& midCol,  // Colour at midway value
                      const vtkColor3ub& maxCol,  // Colour at max value
-                     size_t ncols0, size_t ncols1=0);
+                     size_t ncols);
 
     // As above but use cv::Vec3b for the colours.
     void setColours( const cv::Vec3b& minCol,
                      const cv::Vec3b& midCol,
                      const cv::Vec3b& maxCol,
-                     size_t ncols0, size_t ncols1=0);
+                     size_t ncols);
 
     // Create and return a new lookup table for the given renderer
     // if an existing one isn't present for the given renderer.
