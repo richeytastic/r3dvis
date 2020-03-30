@@ -2,7 +2,7 @@
 Visualise r3d::Mesh objects using VTK. Also provides some other high-level VTK specific wrapper functions.
 
 ## Prerequisites
-- [rFeatures](../../../rFeatures)
+- [r3d](../../../r3d)
 
 - [VTK](http://www.vtk.org)
 
