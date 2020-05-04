@@ -42,12 +42,11 @@ VtkVectorMap::VtkVectorMap( vtkPolyData* inputData, bool useNormal)
     else
         _glyph->SetVectorModeToUseVector();
 
-    _glyph->Update();
-
     // Create the actor
     vtkNew<vtkPolyDataMapper> mapper;
     mapper->SetInputConnection( _glyph->GetOutputPort());
     mapper->SetScalarVisibility(false);
+
     _actor->SetMapper(mapper);
 
     // Ambient lighting only
@@ -69,6 +68,16 @@ void VtkVectorMap::copyProperties( const VtkVectorMap& sa)
 }   // end copyProperties
 
 
+void VtkVectorMap::setScalarColourLookup( vtkLookupTable *ltab, double minVal, double maxVal)
+{
+    _glyph->SetColorModeToColorByScalar();
+    _actor->GetMapper()->SetLookupTable( ltab);
+    _actor->GetMapper()->SetScalarRange( minVal, maxVal);
+    _actor->GetMapper()->SetScalarVisibility( ltab != nullptr);
+    _glyph->Update();
+}   // end setScalarColourLookup
+
+
 void VtkVectorMap::setScaleFactor( double f) { _glyph->SetScaleFactor(f);}
 double VtkVectorMap::scaleFactor() const { return _glyph->GetScaleFactor();}
 
@@ -78,8 +87,14 @@ bool VtkVectorMap::pickable() const { return _actor->GetPickable() != 0;}
 void VtkVectorMap::setVisible( bool v) { _actor->SetVisibility(v);}
 bool VtkVectorMap::visible() const { return _actor->GetVisibility() != 0;}
 
-void VtkVectorMap::setColour( double r, double g, double b) { _actor->GetProperty()->SetColor( r, g, b);}
-void VtkVectorMap::setColour( const double c[3]) { _actor->GetProperty()->SetColor( const_cast<double*>(c));}
+void VtkVectorMap::setColour( double r, double g, double b)
+{
+    _actor->GetMapper()->SetScalarVisibility(false);
+    _actor->GetProperty()->SetColor( r, g, b);
+}   // end setColour
+
+void VtkVectorMap::setColour( const double c[3]) { setColour( c[0], c[1], c[2]);}
+
 const double* VtkVectorMap::colour() const { return _actor->GetProperty()->GetColor();}
 
 void VtkVectorMap::setOpacity( double a) { _actor->GetProperty()->SetOpacity(a);}

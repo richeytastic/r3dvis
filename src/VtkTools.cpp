@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -449,3 +449,57 @@ cv::Mat_<byte> r3dvis::contrastStretch( const cv::Mat& m, const cv::Mat_<byte> m
     mtemp.convertTo( outm, CV_8U, 255./(mx-mn));
     return outm;
 }   // end contrastStretch
+
+
+namespace {
+
+vtkSmartPointer<vtkFloatArray> makeTexturedNormals( const r3d::Curvature &cv)
+{
+    vtkSmartPointer<vtkFloatArray> narr = vtkSmartPointer<vtkFloatArray>::New();
+    narr->SetNumberOfComponents( 3);
+
+    const r3d::Mesh& mesh = cv.mesh();
+    const int nfaces = int(mesh.numFaces());
+    const r3d::MatX3f& nrms = cv.vertexNormals();
+    narr->SetNumberOfTuples( 3*nfaces);
+
+    int i = 0;
+    for ( int fid = 0; fid < nfaces; ++fid)
+    {
+        const int* fvidxs = mesh.fvidxs(fid);
+        narr->SetTuple3( i++, nrms(fvidxs[0],0), nrms(fvidxs[0],1), nrms(fvidxs[0],2));
+        narr->SetTuple3( i++, nrms(fvidxs[1],0), nrms(fvidxs[1],1), nrms(fvidxs[1],2));
+        narr->SetTuple3( i++, nrms(fvidxs[2],0), nrms(fvidxs[2],1), nrms(fvidxs[2],2));
+    }   // end for
+
+    return narr;
+}   // end makeTexturedNormals
+
+
+vtkSmartPointer<vtkFloatArray> makeNonTexturedNormals( const r3d::Curvature &cv)
+{
+    vtkSmartPointer<vtkFloatArray> narr = vtkSmartPointer<vtkFloatArray>::New();
+    narr->SetNumberOfComponents( 3);
+
+    const r3d::MatX3f& nrms = cv.vertexNormals();
+    const int nvtxs = nrms.rows();
+    narr->SetNumberOfTuples( nvtxs);
+
+    for ( int vidx = 0; vidx < nvtxs; ++vidx)
+        narr->SetTuple3( vidx, nrms(vidx,0), nrms(vidx,1), nrms(vidx,2));
+
+    return narr;
+}   // end makeNonTexturedNormals
+
+}   // end namespace
+
+
+vtkSmartPointer<vtkFloatArray> r3dvis::makeNormals( const r3d::Curvature &cv)
+{
+    vtkSmartPointer<vtkFloatArray> nrms;
+    if ( cv.mesh().numMats() > 0)
+        nrms = makeTexturedNormals( cv);
+    else
+        nrms = makeNonTexturedNormals( cv);
+    return nrms;
+}   // end makeNormals

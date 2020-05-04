@@ -91,7 +91,6 @@ private:
     vtkRenderer* _ren;
     const PointOrigin _pointOrigin;
     const double _tolerance;
-    cv::Point _toPxls( const cv::Point2f&) const;
 };  // end class
 
 }   // end namespace

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #ifndef r3dvis_VTK_Tools_H
 #define r3dvis_VTK_Tools_H
 
-#include <r3d/Mesh.h>
+#include <r3d/Curvature.h>
 #include <vector>
 #include <iostream>
 #include <vtkActor.h>
@@ -28,6 +28,7 @@
 #include <vtkTexture.h>
 #include <vtkPolyData.h>
 #include <vtkMatrix4x4.h>
+#include <vtkFloatArray.h>
 #include <vtkImageImport.h>
 #include <vtkLookupTable.h>
 #include <vtkSmartPointer.h>
@@ -84,6 +85,9 @@ r3dvis_EXPORT void extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& 
 
 // Generate a set of normals from a vtkPolyData object having point and cell data.
 r3dvis_EXPORT vtkSmartPointer<vtkPolyData> generateNormals( vtkSmartPointer<vtkPolyData> pdata);
+
+// Make normals from a mesh's curvature data.
+r3dvis_EXPORT vtkSmartPointer<vtkFloatArray> makeNormals( const r3d::Curvature&);
 
 // Dump a colour or Z buffer image from the provided render window.
 r3dvis_EXPORT cv::Mat_<cv::Vec3b> extractImage( const vtkRenderWindow*);

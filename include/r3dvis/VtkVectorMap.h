@@ -19,6 +19,7 @@
 #define r3dvis_VTK_VECTOR_MAP_H
 
 #include "r3dvis_Export.h"
+#include <vtkLookupTable.h>
 #include <vtkArrowSource.h>
 #include <vtkGlyph3D.h>
 #include <vtkPolyData.h>
@@ -56,6 +57,8 @@ public:
     void setColour( double r, double g, double b);
     void setColour( const double[3]);
     const double* colour() const;
+
+    void setScalarColourLookup( vtkLookupTable*, double minVal, double maxVal);
 
     void setOpacity( double);
     double opacity() const;
