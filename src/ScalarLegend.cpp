@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
 
     legend->GetLabelTextProperty()->SetFontFamilyToCourier();
     legend->GetLabelTextProperty()->SetItalic(false);
-    legend->GetLabelTextProperty()->SetFontSize(14);
+    legend->GetLabelTextProperty()->SetFontSize(13);
     legend->SetNumberOfLabels( 11);
     legend->SetMaximumWidthInPixels( 80);
     legend->SetUnconstrainedFontSize(true);
@@ -59,14 +59,21 @@ void ScalarLegend::setTitle( const std::string& title)
 }   // end setTitle
 
 
+void ScalarLegend::setNumLabels( int n)
+{
+    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
+    legend->SetNumberOfLabels( n);
+}   // end setNumLabels
+
+
 void ScalarLegend::setLookupTable( vtkLookupTable* lut)
 {
     const double minv = lut->GetTableRange()[0];
     const double maxv = lut->GetTableRange()[1];
 
     const int maxWidth = 4;
-    int ndecimals = std::max<int>(0, maxWidth - (int)(log(maxv - minv) + 1));
-    ndecimals = std::min<int>(ndecimals, maxWidth-1);
+    int ndecimals = 2;//std::max<int>(0, maxWidth - (int)(log(maxv - minv) + 1));
+    //ndecimals = std::min<int>(ndecimals, maxWidth-1);
 
     std::ostringstream oss;
     oss << "% " << maxWidth << "." << ndecimals << "f";

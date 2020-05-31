@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,18 +52,23 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, 
     ncols = std::max<size_t>(2, ncols);
     _setNumTableValues( ncols);
 
-    const float stepProp = 1.0f/(ncols-1);
-    float cstep[3];
-    cstep[0] = stepProp * (float(fcol[0]) - float(scol[0]));
-    cstep[1] = stepProp * (float(fcol[1]) - float(scol[1]));
-    cstep[2] = stepProp * (float(fcol[2]) - float(scol[2]));
+    // Convert to HSV colour space
+    const r3d::Colour shsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)scol[0], (int)scol[1], (int)scol[2]));
+    const r3d::Colour fhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)fcol[0], (int)fcol[1], (int)fcol[3]));
 
-    float rgb[3];
+    const double stepProp = 1.0/ncols;
+    double cstep[3];
+    cstep[0] = 0;//stepProp * (fhsv[0] - shsv[0]);
+    cstep[1] = stepProp * (fhsv[1] - shsv[1]);
+    cstep[2] = stepProp * (fhsv[2] - shsv[2]);
+
     for ( size_t i = 0; i < ncols; ++i)
     {
-        rgb[0] = (scol[0] + i*cstep[0])/255.0f;
-        rgb[1] = (scol[1] + i*cstep[1])/255.0f;
-        rgb[2] = (scol[2] + i*cstep[2])/255.0f;
+        r3d::Colour hsv = shsv;
+        hsv[0] += i*cstep[0];
+        hsv[1] += i*cstep[1];
+        hsv[2] += i*cstep[2];
+        const r3d::Colour rgb = r3d::Colour::hsv2rgb( hsv);
         _updateValue( int(i), rgb);
     }   // end for
 
@@ -76,33 +81,43 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
     ncols = std::max<size_t>(2, ncols);
     _setNumTableValues( ncols);
 
-    float rgb[3];
-    float cstep[3];
-    const float stepProp = 2.0f/(ncols-1);
-    const size_t hcols = size_t(float(ncols)/2);
+    // Convert to HSV colour space
+    const r3d::Colour shsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)scol[0], (int)scol[1], (int)scol[2]));
+    const r3d::Colour mhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)mcol[0], (int)mcol[1], (int)mcol[2]));
+    const r3d::Colour fhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)fcol[0], (int)fcol[1], (int)fcol[2]));
+
+    double cstep[3];
+    const size_t hcols = double(ncols)/2;
+    double stepProp = 1.0/hcols;
 
     // First half
-    cstep[0] = stepProp * (float(mcol[0]) - float(scol[0]));
-    cstep[1] = stepProp * (float(mcol[1]) - float(scol[1]));
-    cstep[2] = stepProp * (float(mcol[2]) - float(scol[2]));
+    cstep[0] = 0;//stepProp * (mhsv[0] - shsv[0]);
+    cstep[1] = stepProp * (mhsv[1] - shsv[1]);
+    cstep[2] = stepProp * (mhsv[2] - shsv[2]);
     for ( size_t i = 0; i < hcols; ++i)
     {
-        rgb[0] = (scol[0] + i*cstep[0])/255.0f;
-        rgb[1] = (scol[1] + i*cstep[1])/255.0f;
-        rgb[2] = (scol[2] + i*cstep[2])/255.0f;
+        r3d::Colour hsv = shsv;
+        hsv[0] += i*cstep[0];
+        hsv[1] += i*cstep[1];
+        hsv[2] += i*cstep[2];
+        const r3d::Colour rgb = r3d::Colour::hsv2rgb( hsv);
         _updateValue( int(i), rgb);
     }   // end for
 
+    stepProp = 1.0/(ncols - hcols);
+
     // Second half
-    cstep[0] = stepProp * (float(fcol[0]) - float(mcol[0]));
-    cstep[1] = stepProp * (float(fcol[1]) - float(mcol[1]));
-    cstep[2] = stepProp * (float(fcol[2]) - float(mcol[2]));
+    cstep[0] = 0;//stepProp * (fhsv[0] - mhsv[0]);
+    cstep[1] = stepProp * (fhsv[1] - mhsv[1]);
+    cstep[2] = stepProp * (fhsv[2] - mhsv[2]);
     int j = 0;
     for ( size_t i = hcols; i < ncols; ++i, ++j)
     {
-        rgb[0] = (mcol[0] + j*cstep[0])/255.0f;
-        rgb[1] = (mcol[1] + j*cstep[1])/255.0f;
-        rgb[2] = (mcol[2] + j*cstep[2])/255.0f;
+        r3d::Colour hsv = mhsv;
+        hsv[0] += j*cstep[0];
+        hsv[1] += j*cstep[1];
+        hsv[2] += j*cstep[2];
+        const r3d::Colour rgb = r3d::Colour::hsv2rgb( hsv);
         _updateValue( int(i), rgb);
     }   // end for
 
@@ -118,7 +133,7 @@ void LookupTable::_buildTables()
 }   // end _buildTables
 
 
-void LookupTable::_updateValue( int i, const float rgb[3])
+void LookupTable::_updateValue( int i, const r3d::Colour &rgb)
 {
     _blut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
     for ( auto p : _luts)

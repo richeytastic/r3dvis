@@ -19,6 +19,7 @@
 #define r3dvis_LOOKUP_TABLE_H
 
 #include "r3dvis_Export.h"
+#include <r3d/Colour.h>
 #include <opencv2/opencv.hpp>
 #include <vtkLookupTable.h>
 #include <vtkRenderer.h>
@@ -57,7 +58,7 @@ private:
     std::unordered_map<const vtkRenderer*, vtkSmartPointer<vtkLookupTable> > _luts;
 
     void _setNumTableValues( size_t);
-    void _updateValue( int, const float[3]);
+    void _updateValue( int, const r3d::Colour&);
     void _buildTables();
 };  // end class
 

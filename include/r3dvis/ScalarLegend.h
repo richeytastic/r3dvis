@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ public:
     vtkTextProperty* labelProperty();
 
     void setTitle( const std::string&);
+    void setNumLabels( int);
     void setLookupTable( vtkLookupTable*);
 
     void setVisible( bool);
