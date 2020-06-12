@@ -68,8 +68,8 @@ void ScalarLegend::setNumLabels( int n)
 
 void ScalarLegend::setLookupTable( vtkLookupTable* lut)
 {
-    const double minv = lut->GetTableRange()[0];
-    const double maxv = lut->GetTableRange()[1];
+    //const double minv = lut->GetTableRange()[0];
+    //const double maxv = lut->GetTableRange()[1];
 
     const int maxWidth = 4;
     int ndecimals = 2;//std::max<int>(0, maxWidth - (int)(log(maxv - minv) + 1));
