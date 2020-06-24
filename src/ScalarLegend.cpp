@@ -26,13 +26,16 @@ using r3dvis::ScalarLegend;
 ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
 {
     _widget = vtkSmartPointer<vtkScalarBarWidget>::New();
+    _widget->SetInteractor(rwint);
+    _widget->SetRepositionable(false);
+
     vtkScalarBarActor* legend = _widget->GetScalarBarActor();
 
     legend->GetLabelTextProperty()->SetFontFamilyToCourier();
     legend->GetLabelTextProperty()->SetItalic(false);
     legend->GetLabelTextProperty()->SetFontSize(13);
     legend->SetNumberOfLabels( 11);
-    legend->SetMaximumWidthInPixels( 80);
+    //legend->SetMaximumWidthInPixels( 80);
     legend->SetUnconstrainedFontSize(true);
     legend->DrawTickLabelsOn();
     legend->SetPosition(0.61, 0.3);
@@ -42,9 +45,6 @@ ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
     legend->GetTitleTextProperty()->SetFontSize(16);
     legend->GetTitleTextProperty()->SetBold(false);
     legend->GetTitleTextProperty()->SetItalic(false);
-
-    _widget->SetInteractor(rwint);
-    _widget->SetRepositionable(false);
 }   // end dtor
 
 

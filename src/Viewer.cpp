@@ -25,11 +25,11 @@ Viewer::Ptr Viewer::create( bool offscreen) { return Ptr( new Viewer( offscreen)
 Viewer::Viewer( bool offscreen)
 {
     _renWin->SetOffScreenRendering(offscreen);
-	_ren->SetBackground( 0.0, 0.0, 0.0);
     _renWin->SetPointSmoothing( false);
 	_renWin->AddRenderer( _ren);
-    _ren->SetTwoSidedLighting( true);  // Don't light occluded sides
-    _ren->SetAutomaticLightCreation( true);
+	_ren->SetBackground( 0.0, 0.0, 0.0);
+    _ren->SetTwoSidedLighting( true);
+    _ren->SetAutomaticLightCreation( false);
 }  // end ctor
 
 

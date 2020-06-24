@@ -71,10 +71,10 @@ r3d::Mesh::Ptr r3dvis::makeObject( const vtkActor* actor)
     }   // end for
 
     faces->InitTraversal();
-    vtkIdType npts;
-    vtkIdType *vidxs;
-    while ( faces->GetNextCell( npts, vidxs) > 0)
-        model->addFace( vmap[vidxs[0]], vmap[vidxs[1]], vmap[vidxs[2]]);
+    vtkNew<vtkIdList> vidxs;
+    vidxs->SetNumberOfIds(3);
+    while ( faces->GetNextCell( vidxs) > 0) // TODO not a thread-safe call - upgrade to using NewIterator() instead (VTK 9.0.0)
+        model->addFace( vmap[vidxs->GetId(0)], vmap[vidxs->GetId(1)], vmap[vidxs->GetId(2)]);
     return model;
 }   // end makeObject
 
