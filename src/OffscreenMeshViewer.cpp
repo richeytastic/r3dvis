@@ -65,14 +65,22 @@ void OffscreenMeshViewer::clear()
 }   // end clear
 
 
-void OffscreenMeshViewer::setModel( const r3d::Mesh& model)
+vtkActor* OffscreenMeshViewer::setModel( const r3d::Mesh& model)
 {
     clear();
-    // Create the actor
     _actor = VtkActorCreator::generateActor( model);
     _viewer->addActor( _actor);
     setCamera( _viewer->camera());  // Refresh
+    return _actor;
 }   // end setModel
+
+
+void OffscreenMeshViewer::setModelColour( double r, double g, double b)
+{
+    assert(_actor);
+    if ( _actor)
+        _actor->GetProperty()->SetColor( r, g, b);
+}   // end setModelColour
 
 
 void OffscreenMeshViewer::setCamera( const CameraParams& cp)

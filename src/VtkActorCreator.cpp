@@ -364,6 +364,8 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateSurfaceActor( const Mesh& mod
     vtkSmartPointer<vtkPolyData> pd = createSequencePolyData( model);
     vtkSmartPointer<vtkActor> actor = makeActor( pd);
     actor->PokeMatrix( r3dvis::toVTK( model.transformMatrix()));
+    actor->GetProperty()->SetAmbient(0.0);
+    actor->GetProperty()->SetDiffuse(1.0);
     return actor;
 }   // end generateSurfaceActor
 
