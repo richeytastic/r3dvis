@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#ifndef r3dvis_VTK_VECTOR_MAP_H
-#define r3dvis_VTK_VECTOR_MAP_H
+#ifndef r3dvis_VTK_VECTOR_FIELD_H
+#define r3dvis_VTK_VECTOR_FIELD_H
 
 #include "r3dvis_Export.h"
 #include <vtkLookupTable.h>
@@ -28,20 +28,18 @@
 
 namespace r3dvis {
 
-class r3dvis_EXPORT VtkVectorMap
+class r3dvis_EXPORT VtkVectorField
 {
 public:
-    using Ptr = std::shared_ptr<VtkVectorMap>;
+    using Ptr = std::shared_ptr<VtkVectorField>;
 
-    // If useNormal is false, the vector data on the poly data will be used.
-    static Ptr create( vtkPolyData* src, bool useNormal=false);
+    // If useNormal is false, the vector array set on the polydata will be used.
+    static Ptr create( const vtkPolyData*, bool useNormal=false);
 
-    explicit VtkVectorMap( vtkPolyData* src, bool useNormal=false);
+    explicit VtkVectorField( const vtkPolyData*, bool useNormal=false);
 
-    // It is up to the caller to ensure that the renderer that the prop is
-    // added to is provided as a parameter to setRenderer. It is possible
-    // to assign a different renderer (for distance calculations) than the
-    // one the prop is added to.
+    // Caller must ensure that the renderer the prop is added to
+    // corresponds with the vtkLookupTable set (if any).
     const vtkActor* prop() const { return _actor;}
     vtkActor* prop() { return _actor;}
 
@@ -58,7 +56,7 @@ public:
     void setColour( const double[3]);
     const double* colour() const;
 
-    void setScalarColourLookup( vtkLookupTable*, double minVal, double maxVal);
+    void setColourMap( const vtkLookupTable*, double minVal, double maxVal);
 
     void setOpacity( double);
     double opacity() const;
@@ -67,16 +65,16 @@ public:
     const vtkMatrix4x4* transform() const;      // Return the actor's current transform.
     void fixTransform();
 
-    // Copy properties from the provided actor to this one (including renderer).
-    void copyProperties( const VtkVectorMap&);
+    // Copy properties from the provided actor to this one.
+    void copyProperties( const VtkVectorField&);
 
 private:
     vtkNew<vtkArrowSource> _arrow;
     vtkNew<vtkGlyph3D> _glyph;
     vtkNew<vtkActor> _actor;
 
-    VtkVectorMap( const VtkVectorMap&) = delete;
-    void operator=( const VtkVectorMap&) = delete;
+    VtkVectorField( const VtkVectorField&) = delete;
+    void operator=( const VtkVectorField&) = delete;
 };  // end class
 
 }   // end namespace

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,26 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include <VtkVectorMap.h>
+#include <VtkVectorField.h>
 #include <vtkProperty.h>
 #include <VtkTools.h>
-using r3dvis::VtkVectorMap;
+using r3dvis::VtkVectorField;
 
 
-VtkVectorMap::Ptr VtkVectorMap::create( vtkPolyData* inputData, bool useNormal)
+VtkVectorField::Ptr VtkVectorField::create( const vtkPolyData* inputData, bool useNormal)
 {
-    return Ptr( new VtkVectorMap( inputData, useNormal));
+    return Ptr( new VtkVectorField( inputData, useNormal));
 }   // end create
 
 
-VtkVectorMap::VtkVectorMap( vtkPolyData* inputData, bool useNormal)
+VtkVectorField::VtkVectorField( const vtkPolyData* inputData, bool useNormal)
 {
-    _arrow->SetShaftRadius( 0.01);
-    _arrow->SetTipLength( 0.2);
-    _arrow->SetTipRadius( 0.04);
+    _arrow->SetShaftRadius( 0.06);
+    _arrow->SetTipLength( 0.30);
+    _arrow->SetTipRadius( 0.18);
 
     _glyph->SetSourceConnection( _arrow->GetOutputPort());
-    _glyph->SetInputData( inputData);
+    _glyph->SetInputData( const_cast<vtkPolyData*>(inputData));
     _glyph->SetScaleFactor( 1.0);
 
     if ( useNormal)
@@ -57,7 +57,7 @@ VtkVectorMap::VtkVectorMap( vtkPolyData* inputData, bool useNormal)
 }   // end ctor
 
 
-void VtkVectorMap::copyProperties( const VtkVectorMap& sa)
+void VtkVectorField::copyProperties( const VtkVectorField& sa)
 {
     setPickable(sa.pickable());
     setScaleFactor(sa.scaleFactor());
@@ -68,41 +68,41 @@ void VtkVectorMap::copyProperties( const VtkVectorMap& sa)
 }   // end copyProperties
 
 
-void VtkVectorMap::setScalarColourLookup( vtkLookupTable *ltab, double minVal, double maxVal)
+void VtkVectorField::setColourMap( const vtkLookupTable *ltab, double minVal, double maxVal)
 {
     _glyph->SetColorModeToColorByScalar();
-    _actor->GetMapper()->SetLookupTable( ltab);
+    _actor->GetMapper()->SetLookupTable( const_cast<vtkLookupTable*>(ltab));
     _actor->GetMapper()->SetScalarRange( minVal, maxVal);
     _actor->GetMapper()->SetScalarVisibility( ltab != nullptr);
     _glyph->Update();
-}   // end setScalarColourLookup
+}   // end setColourMap
 
 
-void VtkVectorMap::setScaleFactor( double f) { _glyph->SetScaleFactor(f);}
-double VtkVectorMap::scaleFactor() const { return _glyph->GetScaleFactor();}
+void VtkVectorField::setScaleFactor( double f) { _glyph->SetScaleFactor(f);}
+double VtkVectorField::scaleFactor() const { return _glyph->GetScaleFactor();}
 
-void VtkVectorMap::setPickable( bool v) { _actor->SetPickable(v);}
-bool VtkVectorMap::pickable() const { return _actor->GetPickable() != 0;}
+void VtkVectorField::setPickable( bool v) { _actor->SetPickable(v);}
+bool VtkVectorField::pickable() const { return _actor->GetPickable() != 0;}
 
-void VtkVectorMap::setVisible( bool v) { _actor->SetVisibility(v);}
-bool VtkVectorMap::visible() const { return _actor->GetVisibility() != 0;}
+void VtkVectorField::setVisible( bool v) { _actor->SetVisibility(v);}
+bool VtkVectorField::visible() const { return _actor->GetVisibility() != 0;}
 
-void VtkVectorMap::setColour( double r, double g, double b)
+void VtkVectorField::setColour( double r, double g, double b)
 {
     _actor->GetMapper()->SetScalarVisibility(false);
     _actor->GetProperty()->SetColor( r, g, b);
 }   // end setColour
 
-void VtkVectorMap::setColour( const double c[3]) { setColour( c[0], c[1], c[2]);}
+void VtkVectorField::setColour( const double c[3]) { setColour( c[0], c[1], c[2]);}
 
-const double* VtkVectorMap::colour() const { return _actor->GetProperty()->GetColor();}
+const double* VtkVectorField::colour() const { return _actor->GetProperty()->GetColor();}
 
-void VtkVectorMap::setOpacity( double a) { _actor->GetProperty()->SetOpacity(a);}
-double VtkVectorMap::opacity() const { return _actor->GetProperty()->GetOpacity();}
+void VtkVectorField::setOpacity( double a) { _actor->GetProperty()->SetOpacity(a);}
+double VtkVectorField::opacity() const { return _actor->GetProperty()->GetOpacity();}
 
 
-void VtkVectorMap::pokeTransform( const vtkMatrix4x4* vm) { _actor->PokeMatrix( const_cast<vtkMatrix4x4*>(vm));}
+void VtkVectorField::pokeTransform( const vtkMatrix4x4* vm) { _actor->PokeMatrix( const_cast<vtkMatrix4x4*>(vm));}
 
-const vtkMatrix4x4* VtkVectorMap::transform() const { return _actor->GetMatrix();}
+const vtkMatrix4x4* VtkVectorField::transform() const { return _actor->GetMatrix();}
 
-void VtkVectorMap::fixTransform() { r3dvis::fixTransform( _actor);}
+void VtkVectorField::fixTransform() { r3dvis::fixTransform( _actor);}

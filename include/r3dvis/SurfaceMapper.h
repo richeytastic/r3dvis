@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,36 +34,48 @@ using MetricFn = std::function<float(int id, size_t k)>;
 class r3dvis_EXPORT SurfaceMapper
 {
 public:
-    // Set mapPolys to true to map polygons (default), false to map vertices.
-    // Set dims to 1 for mapping scalars (default), higher values for mapping vectors.
-    using CPtr = std::shared_ptr<const SurfaceMapper>;
-    static CPtr create( const MetricFn&, bool mapPolys=true, size_t dims=1);
+    // Set dims to 1 for mapping scalars (default), higher values for vectors.
+    SurfaceMapper( const MetricFn&, size_t dims);
 
-    SurfaceMapper( const MetricFn&, bool mapPolys, size_t dims);
+    inline size_t dims() const { return _ndims;}
 
-    inline bool mapsPolys() const { return _mapsPolys;}
-    inline size_t ndimensions() const { return _ndims;}
+    // Make and return the array of metrics - returned array's name is 'name'.
+    // (Array name must be set before adding to an actor's cell or point data).
+    // Use function makeArrayNoTx to assume the same number of vertices as the mesh
+    // for the actor (i.e. if the array mapping is for a non-textured surface actor).
+    vtkSmartPointer<vtkFloatArray> makeArray( const r3d::Mesh&, const char *name) const;
+    vtkSmartPointer<vtkFloatArray> makeArrayNoTx( const r3d::Mesh&, const char *name) const;
 
-    // Make and return the array of metrics.
-    // If isTextureMapped == true then the actor is assumed to have 3*nfaces vertices.
-    // Note that the name of the returned array must be set before adding to an actor's
-    // cell or point data.
-    vtkSmartPointer<vtkFloatArray> makeArray( const r3d::Mesh&, bool isTextureMapped) const;
-
-    // Get min/max for component c from last call to mapActor.
-    float getMin( int c=0) const { return _min[c];}
-    float getMax( int c=0) const { return _max[c];}
+protected:
+    const MetricFn _mfn;
+    virtual void _makeArray( const r3d::Mesh&, vtkFloatArray*) const = 0;
+    virtual void _makeArrayNoTx( const r3d::Mesh&, vtkFloatArray*) const = 0;
 
 private:
-    MetricFn _metricfn;
-    const bool _mapsPolys;
     const size_t _ndims;
-    mutable std::vector<float> _min;
-    mutable std::vector<float> _max;
-    float val( int, size_t) const;
-
+    vtkSmartPointer<vtkFloatArray> _initArray( const r3d::Mesh&, const char*) const;
     SurfaceMapper( const SurfaceMapper&) = delete;
     void operator=( const SurfaceMapper&) = delete;
+};  // end class
+
+
+class r3dvis_EXPORT VertexSurfaceMapper : public SurfaceMapper
+{
+public:
+    VertexSurfaceMapper( const MetricFn&, size_t);
+protected:
+    void _makeArray( const r3d::Mesh&, vtkFloatArray*) const override;
+    void _makeArrayNoTx( const r3d::Mesh&, vtkFloatArray*) const override;
+};  // end class
+
+
+class r3dvis_EXPORT FaceSurfaceMapper : public SurfaceMapper
+{
+public:
+    FaceSurfaceMapper( const MetricFn&, size_t);
+protected:
+    void _makeArray( const r3d::Mesh&, vtkFloatArray*) const override;
+    void _makeArrayNoTx( const r3d::Mesh&, vtkFloatArray*) const override;
 };  // end class
 
 }   // end namespace

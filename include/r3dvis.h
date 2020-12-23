@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "r3dvis/VtkActorCreator.h"
 #include "r3dvis/VtkScalingActor.h"
 #include "r3dvis/VtkTools.h"
+#include "r3dvis/VtkVectorField.h"
 #include "r3dvis/VTKTypes.h"
 
 #endif

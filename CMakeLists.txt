@@ -29,7 +29,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/ViewerProjector.h"
     "${INCLUDE_F}/VtkActorCreator.h"
     "${INCLUDE_F}/VtkScalingActor.h"
-    "${INCLUDE_F}/VtkVectorMap.h"
+    "${INCLUDE_F}/VtkVectorField.h"
     "${INCLUDE_F}/VtkTools.h"
     "${INCLUDE_F}/VTKTypes.h"
     )
@@ -50,7 +50,7 @@ set( SRC_FILES
     ${SRC_DIR}/ViewerProjector
     ${SRC_DIR}/VtkActorCreator
     ${SRC_DIR}/VtkScalingActor
-    ${SRC_DIR}/VtkVectorMap
+    ${SRC_DIR}/VtkVectorField
     ${SRC_DIR}/VtkTools
     )
 
