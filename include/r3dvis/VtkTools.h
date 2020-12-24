@@ -89,9 +89,9 @@ r3dvis_EXPORT vtkSmartPointer<vtkPolyData> generateNormals( vtkSmartPointer<vtkP
 // Make normals from a mesh's curvature data.
 r3dvis_EXPORT vtkSmartPointer<vtkFloatArray> makeNormals( const r3d::Curvature&);
 
-// Dump a colour or Z buffer image from the provided render window.
-r3dvis_EXPORT cv::Mat_<cv::Vec3b> extractImage( const vtkRenderWindow*);
-r3dvis_EXPORT cv::Mat_<float> extractZBuffer( const vtkRenderWindow*);
+// Dump a colour or Z buffer image from the provided vtkRenderWindow.
+r3dvis_EXPORT cv::Mat_<cv::Vec3b> extractBGR( vtkRenderWindow*);
+r3dvis_EXPORT cv::Mat_<float> extractZ( vtkRenderWindow*);
 
 r3dvis_EXPORT void printCameraDetails( vtkCamera*, std::ostream&);    // Print camera details to the given stream
 

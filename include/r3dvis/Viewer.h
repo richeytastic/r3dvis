@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,10 +93,10 @@ public:
 	vtkRenderWindow* renderWindow() const { return _renWin;}
 
     // Create and return an image of the current window
-    cv::Mat_<cv::Vec3b> extractImage() const;
+    cv::Mat_<cv::Vec3b> extractBGR();
 
     // Extract Z buffer - ensure camera clipping range is set properly prior to using!
-    cv::Mat_<float> extractZBuffer() const;
+    cv::Mat_<float> extractZ();
 
 private:
     vtkNew<vtkRenderer> _ren;

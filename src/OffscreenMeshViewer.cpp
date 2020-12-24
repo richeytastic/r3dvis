@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 #include <OffscreenMeshViewer.h>
 #include <VtkActorCreator.h>
-#include <ImageGrabber.h>
+#include <VtkTools.h>
 using r3dvis::OffscreenMeshViewer;
 using r3dvis::byte;
 using r3d::CameraParams;
@@ -91,17 +91,12 @@ void OffscreenMeshViewer::setCamera( const CameraParams& cp)
 }   // end setCamera
 
 
-cv::Mat_<cv::Vec3b> OffscreenMeshViewer::snapshot() const
-{
-    ImageGrabber ig(*_viewer);
-    return ig.colour();
-}   // end snapshot
+cv::Mat_<cv::Vec3b> OffscreenMeshViewer::snapshot() const { return _viewer->extractBGR();}
 
 
 cv::Mat_<byte> OffscreenMeshViewer::lightnessSnapshot() const
 {
-    ImageGrabber ig(*_viewer);
-    return ig.light();
+    return contrastStretch( getLightness( snapshot(), 255, CV_8U));
 }   // end lightnessSnapshot
 
 

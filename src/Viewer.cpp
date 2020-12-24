@@ -158,5 +158,15 @@ cv::Size Viewer::size() const
 }   // end size
 
 void Viewer::updateRender() { _renWin->Render();}
-cv::Mat_<cv::Vec3b> Viewer::extractImage() const { return r3dvis::extractImage( _renWin);}
-cv::Mat_<float> Viewer::extractZBuffer() const { return r3dvis::extractZBuffer( _renWin);}
+
+cv::Mat_<cv::Vec3b> Viewer::extractBGR()
+{
+    updateRender();
+    return r3dvis::extractBGR( _renWin);
+}   // end extractBGR
+
+cv::Mat_<float> Viewer::extractZ()
+{
+    updateRender();
+    return r3dvis::extractZ( _renWin);
+}   // end extractZ

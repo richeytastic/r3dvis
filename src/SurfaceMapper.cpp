@@ -59,10 +59,10 @@ vtkSmartPointer<vtkFloatArray> SurfaceMapper::makeArrayNoTx( const Mesh& mesh, c
 
 void FaceSurfaceMapper::_makeArray( const r3d::Mesh &mesh, vtkFloatArray *cvals) const
 {
-    const size_t nd = dims();
+    const int nd = int(dims());
     const int nf = int(mesh.numFaces());
     cvals->SetNumberOfTuples( nf);
-    for ( size_t k = 0; k < nd; ++k)
+    for ( int k = 0; k < nd; ++k)
         for ( int fid = 0; fid < nf; ++fid)
             cvals->SetComponent( fid, k, _mfn( fid, k));
 }   // end _makeArray
@@ -80,10 +80,10 @@ void FaceSurfaceMapper::_makeArrayNoTx( const r3d::Mesh &mesh, vtkFloatArray *cv
 // be mapped to all of these duplicate corresponding points in the array.
 void VertexSurfaceMapper::_makeArrayNoTx( const r3d::Mesh &mesh, vtkFloatArray *cvals) const
 {
-    const size_t nd = dims();
+    const int nd = int(dims());
     const int nv = int(mesh.numVtxs());
     cvals->SetNumberOfTuples( nv);
-    for ( size_t k = 0; k < nd; ++k)
+    for ( int k = 0; k < nd; ++k)
         for ( int vid = 0; vid < nv; ++vid)
             cvals->SetComponent( vid, k, _mfn( vid, k));    // One-to-one mapping
 }   // end _makeArrayNoTx

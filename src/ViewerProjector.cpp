@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,16 +24,9 @@ using r3dvis::ViewerProjector;
 ViewerProjector::ViewerProjector( const r3dvis::Viewer::Ptr viewer) : _viewer(viewer) {}
 
 
-cv::Mat_<cv::Vec3b> ViewerProjector::extractImage() const
+cv::Mat ViewerProjector::makeRangeMap( float depthProp, int colourMap)
 {
-    return _viewer->extractImage();
-}   // end extractImage
-
-
-
-cv::Mat ViewerProjector::makeRangeMap( float depthProp, int colourMap) const
-{
-    cv::Mat_<float> rngMap = _viewer->extractZBuffer();
+    cv::Mat_<float> rngMap = _viewer->extractZ();
 
     double mn, mx;
     cv::minMaxLoc( rngMap, &mn, &mx);

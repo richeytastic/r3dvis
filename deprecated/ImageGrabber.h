@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ public:
     // Grabs the current set of images from the passed in render window and scales to requested height.
     // If height is left as non-positive, produced images are the same size as the render window.
     ImageGrabber( vtkRenderWindow*, int reqPixelHeight=0);
-    ImageGrabber( Viewer&, int reqPixelHeight=0);
 
     // Refresh images (only needed if render window has been updated since construction).
     void refresh( int reqPixelHeight = 0);

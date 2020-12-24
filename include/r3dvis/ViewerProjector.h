@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,19 +44,15 @@ class r3dvis_EXPORT ViewerProjector
 public:
     explicit ViewerProjector( const r3dvis::Viewer::Ptr viewer);
 
-    // Create and return an image of the current window (wraps viewer->extractImage()).
-    cv::Mat_<cv::Vec3b> extractImage() const;
-
     // Makes a scaled and coloured range map.
     // depthProp: Proportion of the front of the Z-buffer to use.
     // colourMap: If left at -1, a CV_8UC1 is returned with a grey scale mapping of
     // the depth values. Otherwise, if one of the OpenCV colour maps are used (see above)
     // a CV_8UC3 map is returned.
-    cv::Mat makeRangeMap( float depthProp, int colourMap=-1) const;
+    cv::Mat makeRangeMap( float depthProp, int colourMap=-1);
 
 private:
     const r3dvis::Viewer::Ptr _viewer;
-
 };  // end class
 
 }   // end namespace

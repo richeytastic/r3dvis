@@ -19,15 +19,12 @@
 #define R3DVIS_H
 
 #include "r3dvis/Axes.h"
-#include "r3dvis/ImageGrabber.h"
-#include "r3dvis/InteractorC1.h"
 #include "r3dvis/KeyPresser.h"
 #include "r3dvis/LookupTable.h"
 #include "r3dvis/OffscreenMeshViewer.h"
 #include "r3dvis/PointPlacer.h"
 #include "r3dvis/RendererPicker.h"
 #include "r3dvis/ScalarLegend.h"
-#include "r3dvis/SnapshotKeyPresser.h"
 #include "r3dvis/SurfaceMapper.h"
 #include "r3dvis/Viewer.h"
 #include "r3dvis/ViewerProjector.h"

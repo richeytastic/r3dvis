@@ -20,27 +20,19 @@
 using r3dvis::ImageGrabber;
 using r3dvis::Viewer;
 
-// public
 ImageGrabber::ImageGrabber( vtkRenderWindow* rw, int h) : _renWin(rw)
 {
     refresh(h);
 }   // end ctor
 
-// public
-ImageGrabber::ImageGrabber( Viewer& v, int h) : _renWin(v.renderWindow())
-{
-    refresh(h);
-}   // end ctor
 
-
-// public
 void ImageGrabber::refresh( int reqHeight)
 {
     if ( reqHeight <= 0)
         reqHeight = _renWin->GetSize()[1];
     // Get the raw input images at their view size
-    const cv::Mat_<cv::Vec3b> cimg = r3dvis::extractImage( _renWin);
-    const cv::Mat_<float> dimg = r3dvis::extractZBuffer( _renWin);
+    const cv::Mat_<cv::Vec3b> cimg = r3dvis::extractBGR( _renWin);
+    const cv::Mat_<float> dimg = r3dvis::extractZ( _renWin);
 
     const cv::Size REQSZ( cvRound( reqHeight * double(cimg.cols)/cimg.rows), reqHeight);
     cv::resize( dimg, _dzmap, REQSZ); // Resize depth image to required dims

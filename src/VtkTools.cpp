@@ -210,58 +210,63 @@ vtkSmartPointer<vtkPolyData> r3dvis::generateNormals( vtkSmartPointer<vtkPolyDat
 }   // end generateNormals
 
 
-cv::Mat_<cv::Vec3b> r3dvis::extractImage( const vtkRenderWindow* renWin)
+cv::Mat_<cv::Vec3b> r3dvis::extractBGR( vtkRenderWindow *rwin)
 {
-    vtkRenderWindow* rw = const_cast<vtkRenderWindow*>( renWin);
-    vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    filter->SetInput( rw);
-    filter->SetScale(1);
-    filter->SetInputBufferTypeToRGB();  // Extract RGB info
+    vtkNew<vtkWindowToImageFilter> filter;
+    filter->SetInput(rwin);
+    filter->SetInputBufferTypeToRGB();
+    filter->Modified();
+    filter->Update();
+    vtkImageData *vtkimg = filter->GetOutput();
+    int dims[3];    // Width, height, depth
+    vtkimg->GetDimensions( dims);
+    const int cols = dims[0];
+    const int rows = dims[1];
+    assert( vtkimg->GetNumberOfScalarComponents() == 3);    // RGB
 
-    vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
-    scale->SetOutputScalarTypeToUnsignedChar();
-    scale->SetInputConnection( filter->GetOutputPort());
-
-    vtkSmartPointer<vtkImageExport> exporter = vtkSmartPointer<vtkImageExport>::New();
-    exporter->SetInputConnection( scale->GetOutputPort());
-    exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
-
-    const int cols = rw->GetSize()[0];
-    const int rows = rw->GetSize()[1];
     cv::Mat_<cv::Vec3b> img( rows, cols);
-    exporter->SetExportVoidPointer( img.ptr());
-    exporter->Export();
+    for ( int i = 0; i < rows; ++i)
+    {
+        cv::Vec3b *imgRow = img.ptr<cv::Vec3b>(rows-i-1); // Flip vertically for OpenCV
+        for ( int j = 0; j < cols; ++j)
+        {
+            const unsigned char *ipxl = static_cast<unsigned char*>(vtkimg->GetScalarPointer(j,i,0));
+            cv::Vec3b &pxl = imgRow[j];
+            // Reverse the red/blue channel order
+            pxl[0] = ipxl[2];
+            pxl[1] = ipxl[1];
+            pxl[2] = ipxl[0];
+        }   // end for
+    }   // end for
 
-    // Need to swap the red and blue channels for OpenCV
-    //cv::cvtColor( img, img, CV_RGB2BGR);
-    cv::cvtColor( img, img, cv::COLOR_RGB2BGR);
     return img;
-}   // end extractImage
+}   // end extractBGR
 
 
-cv::Mat_<float> r3dvis::extractZBuffer( const vtkRenderWindow* renWin)
+cv::Mat_<float> r3dvis::extractZ( vtkRenderWindow *rwin)
 {
-    vtkRenderWindow* rw = const_cast<vtkRenderWindow*>( renWin);
-    vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    filter->SetInput( rw);
-    filter->SetScale(1);
+    vtkNew<vtkWindowToImageFilter> filter;
+    filter->SetInput(rwin);
     filter->SetInputBufferTypeToZBuffer();
+    filter->Modified();
+    filter->Update();
+    vtkImageData *vtkimg = filter->GetOutput();
+    int dims[3];    // Width, height, depth
+    vtkimg->GetDimensions( dims);
+    const int cols = dims[0];
+    const int rows = dims[1];
+    assert( vtkimg->GetNumberOfScalarComponents() == 1);
 
-    vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
-    scale->SetOutputScalarTypeToFloat();
-    scale->SetInputConnection( filter->GetOutputPort());
+    cv::Mat_<float> img( rows, cols);
+    for ( int i = 0; i < rows; ++i)
+    {
+        float *imgRow = img.ptr<float>(rows-i-1); // Flip vertically for OpenCV
+        for ( int j = 0; j < cols; ++j)
+            imgRow[j] = *static_cast<float*>(vtkimg->GetScalarPointer(j,i,0));
+    }   // end for
 
-    vtkSmartPointer<vtkImageExport> exporter = vtkSmartPointer<vtkImageExport>::New();
-    exporter->SetInputConnection( scale->GetOutputPort());
-    exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
-
-    const int cols = rw->GetSize()[0];
-    const int rows = rw->GetSize()[1];
-    cv::Mat_<float> rngMap( rows, cols);
-    exporter->SetExportVoidPointer( rngMap.ptr());
-    exporter->Export();
-    return rngMap;
-}   // end extractZBuffer
+    return img;
+}   // end extractZ
 
 
 void r3dvis::printCameraDetails( vtkCamera* cam, std::ostream &os)

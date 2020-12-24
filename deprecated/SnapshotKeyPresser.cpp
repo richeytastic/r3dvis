@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ void SnapshotKeyPresser::addCameraRoll( float roll)
 void SnapshotKeyPresser::saveSnapshot()
 {
     getViewer()->updateRender();
-    const cv::Mat_<cv::Vec3b> img = getViewer()->extractImage();
+    const cv::Mat_<cv::Vec3b> img = getViewer()->extractBGR();
     std::ostringstream oss;
     oss << "snapshot_" << (_snapCount++) << ".jpg";
     cv::imwrite( oss.str(), img);
