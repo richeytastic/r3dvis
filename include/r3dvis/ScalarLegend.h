@@ -40,7 +40,7 @@ public:
 
     void setTitle( const std::string&);
     void setNumLabels( int);
-    void setLookupTable( vtkLookupTable*);
+    void setLookupTable( const vtkLookupTable*);
 
     void setVisible( bool);
     bool isVisible() const;

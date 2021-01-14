@@ -51,7 +51,7 @@ public:
 
     // Create and return a new lookup table for the given renderer
     // if an existing one isn't present for the given renderer.
-    vtkLookupTable* vtk( const vtkRenderer*);
+    const vtkLookupTable* vtk( const vtkRenderer*);
 
 private:
     vtkNew<vtkLookupTable> _blut;

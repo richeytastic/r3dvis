@@ -19,7 +19,7 @@
 using r3dvis::LookupTable;
 
 
-vtkLookupTable* LookupTable::vtk( const vtkRenderer *ren)
+const vtkLookupTable* LookupTable::vtk( const vtkRenderer *ren)
 {
     if ( _luts.count(ren) == 0)
     {
@@ -100,8 +100,7 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
         hsv[0] += i*cstep[0];
         hsv[1] += i*cstep[1];
         hsv[2] += i*cstep[2];
-        const r3d::Colour rgb = r3d::Colour::hsv2rgb( hsv);
-        _updateValue( int(i), rgb);
+        _updateValue( int(i), r3d::Colour::hsv2rgb( hsv));
     }   // end for
 
     stepProp = 1.0/(ncols - hcols);
@@ -111,15 +110,28 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
     cstep[1] = stepProp * (fhsv[1] - mhsv[1]);
     cstep[2] = stepProp * (fhsv[2] - mhsv[2]);
     int j = 0;
-    for ( size_t i = hcols; i < ncols; ++i, ++j)
+    if ( ncols % 2 == 0)
     {
-        r3d::Colour hsv = mhsv;
-        hsv[0] += j*cstep[0];
-        hsv[1] += j*cstep[1];
-        hsv[2] += j*cstep[2];
-        const r3d::Colour rgb = r3d::Colour::hsv2rgb( hsv);
-        _updateValue( int(i), rgb);
-    }   // end for
+        for ( size_t i = ncols - 1; i >= hcols; --i, ++j)
+        {
+            r3d::Colour hsv = fhsv;
+            hsv[0] -= j*cstep[0];
+            hsv[1] -= j*cstep[1];
+            hsv[2] -= j*cstep[2];
+            _updateValue( int(i), r3d::Colour::hsv2rgb( hsv));
+        }   // end for
+    }   // end if
+    else
+    {
+        for ( size_t i = hcols; i < ncols; ++i, ++j)
+        {
+            r3d::Colour hsv = mhsv;
+            hsv[0] += j*cstep[0];
+            hsv[1] += j*cstep[1];
+            hsv[2] += j*cstep[2];
+            _updateValue( int(i), r3d::Colour::hsv2rgb( hsv));
+        }   // end for
+    }   // end else
 
     _buildTables();
 }   // end setColours

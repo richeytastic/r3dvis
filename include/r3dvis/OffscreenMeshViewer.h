@@ -37,7 +37,9 @@ public:
 
     void clear();   // Clear the viewer (remove and delete the actor).
 
-    vtkActor* setModel( const r3d::Mesh&); // Reset the viewer with the given model returning the added actor.
+    vtkActor* setModel( const r3d::Mesh&); // Reset with given model returning the added actor.
+
+    void setActor( vtkSmartPointer<vtkActor>);  // Reset with given actor.
 
     void setSize( const cv::Size&); // Set size of the viewer for snapshots
 

@@ -29,7 +29,7 @@ Viewer::Viewer( bool offscreen)
 	_renWin->AddRenderer( _ren);
 	_ren->SetBackground( 0.0, 0.0, 0.0);
     _ren->SetTwoSidedLighting( true);
-    _ren->SetAutomaticLightCreation( false);
+    _ren->SetAutomaticLightCreation( true); // Was false
 }  // end ctor
 
 

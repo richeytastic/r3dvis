@@ -66,7 +66,7 @@ void ScalarLegend::setNumLabels( int n)
 }   // end setNumLabels
 
 
-void ScalarLegend::setLookupTable( vtkLookupTable* lut)
+void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 {
     //const double minv = lut->GetTableRange()[0];
     //const double maxv = lut->GetTableRange()[1];
@@ -79,7 +79,7 @@ void ScalarLegend::setLookupTable( vtkLookupTable* lut)
     oss << "% " << maxWidth << "." << ndecimals << "f";
     vtkScalarBarActor* legend = _widget->GetScalarBarActor();
     legend->SetLabelFormat( oss.str().c_str());
-    legend->SetLookupTable( lut);
+    legend->SetLookupTable( const_cast<vtkLookupTable*>(lut));
 }   // end setLookupTable
 
 
