@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,17 +49,13 @@ public:
                      const cv::Vec3b& maxCol,
                      size_t ncols);
 
-    // Create and return a new lookup table for the given renderer
-    // if an existing one isn't present for the given renderer.
-    const vtkLookupTable* vtk( const vtkRenderer*);
+    inline const vtkLookupTable* vtk() { return _lut;}
 
 private:
-    vtkNew<vtkLookupTable> _blut;
-    std::unordered_map<const vtkRenderer*, vtkSmartPointer<vtkLookupTable> > _luts;
-
-    void _setNumTableValues( size_t);
+    vtkNew<vtkLookupTable> _lut;
+    void _setNumTableValues( int);
     void _updateValue( int, const r3d::Colour&);
-    void _buildTables();
+    void _buildTable();
 };  // end class
 
 }   // end namespace

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,55 +16,35 @@
  ************************************************************************/
 
 #include <ScalarLegend.h>
-#include <vtkTextProperty.h>
-#include <vtkScalarBarActor.h>
+#include <vtkTexturedActor2D.h>
+#include <vtkTexture.h>
 #include <iostream>
 #include <sstream>
 using r3dvis::ScalarLegend;
 
-
-ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
+ScalarLegend::ScalarLegend()
 {
-    _widget = vtkSmartPointer<vtkScalarBarWidget>::New();
-    _widget->SetInteractor(rwint);
-    _widget->SetRepositionable(false);
+    _legend->GetLabelTextProperty()->SetFontFamilyToCourier();
+    _legend->GetLabelTextProperty()->SetItalic(false);
+    _legend->GetLabelTextProperty()->SetFontSize(13);
+    _legend->SetNumberOfLabels( 11);
+    _legend->SetUnconstrainedFontSize(true);
+    _legend->DrawTickLabelsOn();
 
-    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
-
-    legend->GetLabelTextProperty()->SetFontFamilyToCourier();
-    legend->GetLabelTextProperty()->SetItalic(false);
-    legend->GetLabelTextProperty()->SetFontSize(13);
-    legend->SetNumberOfLabels( 11);
-    //legend->SetMaximumWidthInPixels( 80);
-    legend->SetUnconstrainedFontSize(true);
-    legend->DrawTickLabelsOn();
-    legend->SetPosition(0.61, 0.3);
-    legend->SetHeight(0.65);
-
-    legend->GetTitleTextProperty()->SetFontFamilyToCourier();
-    legend->GetTitleTextProperty()->SetFontSize(16);
-    legend->GetTitleTextProperty()->SetBold(false);
-    legend->GetTitleTextProperty()->SetItalic(false);
-}   // end dtor
+    _legend->GetTitleTextProperty()->SetFontFamilyToCourier();
+    _legend->GetTitleTextProperty()->SetFontSize(16);
+    _legend->GetTitleTextProperty()->SetBold(false);
+    _legend->GetTitleTextProperty()->SetItalic(false);
+}   // end ctor
 
 
-vtkTextProperty* ScalarLegend::titleProperty() { return _widget->GetScalarBarActor()->GetTitleTextProperty();}
-vtkTextProperty* ScalarLegend::labelProperty() { return _widget->GetScalarBarActor()->GetLabelTextProperty();}
+vtkTextProperty* ScalarLegend::titleProperty() { return _legend->GetTitleTextProperty();}
+vtkTextProperty* ScalarLegend::labelProperty() { return _legend->GetLabelTextProperty();}
 
-
-void ScalarLegend::setTitle( const std::string& title)
-{
-    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
-    legend->SetTitle( title.c_str());
-}   // end setTitle
-
-
-void ScalarLegend::setNumLabels( int n)
-{
-    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
-    legend->SetNumberOfLabels( n);
-}   // end setNumLabels
-
+void ScalarLegend::setTitle( const std::string& title) { _legend->SetTitle( title.c_str());}
+void ScalarLegend::setNumLabels( int n) { _legend->SetNumberOfLabels( n);}
+void ScalarLegend::setPosition( double x, double y) { _legend->SetPosition(x,y);}
+void ScalarLegend::setHeight( double v) { _legend->SetHeight(v);}
 
 void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 {
@@ -77,17 +57,15 @@ void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 
     std::ostringstream oss;
     oss << "% " << maxWidth << "." << ndecimals << "f";
-    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
-    legend->SetLabelFormat( oss.str().c_str());
-    legend->SetLookupTable( const_cast<vtkLookupTable*>(lut));
+    _legend->SetLabelFormat( oss.str().c_str());
+    _legend->SetLookupTable( const_cast<vtkLookupTable*>(lut));
 }   // end setLookupTable
 
 
-bool ScalarLegend::isVisible() const { return _widget->GetEnabled() > 0;}
-
-
-void ScalarLegend::setVisible( bool visible)
+/*
+void ScalarLegend::printDebug() const
 {
-    if ( _widget->GetScalarBarActor()->GetLookupTable() != nullptr)
-        _widget->SetEnabled(visible);
-}   // end setVisible
+    vtkTexturedActor2D *ta = _legend->GetTextureActor();
+    vtkTexture *tx = ta->GetTexture();
+}   // end printDebug
+*/
