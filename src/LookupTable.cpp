@@ -58,8 +58,7 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, 
         hsv[0] += i*cstep[0];
         hsv[1] += i*cstep[1];
         hsv[2] += i*cstep[2];
-        const r3d::Colour rgb = r3d::Colour::hsv2rgb( hsv);
-        _updateValue( i, rgb);
+        _updateValue( i, r3d::Colour::hsv2rgb( hsv));
     }   // end for
 
     _buildTable();
@@ -76,9 +75,10 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
     const r3d::Colour mhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)mcol[0], (int)mcol[1], (int)mcol[2]));
     const r3d::Colour fhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)fcol[0], (int)fcol[1], (int)fcol[2]));
 
+    int hcols = N / 2;    // Integer division
+    const double stepProp = (N % 2 == 0) ?  2.0 / (N-1) : 2.0 / (N-2);
+
     double cstep[3];
-    const int hcols = double(N)/2;
-    double stepProp = 1.0/hcols;
 
     // First half
     cstep[0] = 0;//stepProp * (mhsv[0] - shsv[0]);
@@ -93,45 +93,30 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
         _updateValue( i, r3d::Colour::hsv2rgb( hsv));
     }   // end for
 
-    stepProp = 1.0/(N - hcols);
+    if ( N % 2 == 1)
+        _updateValue( hcols, r3d::Colour::hsv2rgb(mhsv));
+    else
+        hcols--;
 
     // Second half
     cstep[0] = 0;//stepProp * (fhsv[0] - mhsv[0]);
     cstep[1] = stepProp * (fhsv[1] - mhsv[1]);
     cstep[2] = stepProp * (fhsv[2] - mhsv[2]);
     int j = 0;
-    if ( N % 2 == 0)
+    for ( int i = N-1; i > hcols; --i, ++j)
     {
-        for ( int i = N - 1; i >= hcols; --i, ++j)
-        {
-            r3d::Colour hsv = fhsv;
-            hsv[0] -= j*cstep[0];
-            hsv[1] -= j*cstep[1];
-            hsv[2] -= j*cstep[2];
-            _updateValue( int(i), r3d::Colour::hsv2rgb( hsv));
-        }   // end for
-    }   // end if
-    else
-    {
-        for ( int i = hcols; i < N; ++i, ++j)
-        {
-            r3d::Colour hsv = mhsv;
-            hsv[0] += j*cstep[0];
-            hsv[1] += j*cstep[1];
-            hsv[2] += j*cstep[2];
-            _updateValue( i, r3d::Colour::hsv2rgb( hsv));
-        }   // end for
-    }   // end else
+        r3d::Colour hsv = fhsv;
+        hsv[0] -= j*cstep[0];
+        hsv[1] -= j*cstep[1];
+        hsv[2] -= j*cstep[2];
+        _updateValue( i, r3d::Colour::hsv2rgb( hsv));
+    }   // end for
 
     _buildTable();
 }   // end setColours
 
 
-void LookupTable::_buildTable()
-{
-    _lut->Build();
-}   // end _buildTable
-
+void LookupTable::_buildTable() { _lut->Build();}
 
 void LookupTable::_updateValue( int i, const r3d::Colour &rgb) { _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);}
 void LookupTable::_setNumTableValues( int ncols) { _lut->SetNumberOfTableValues( ncols);}
