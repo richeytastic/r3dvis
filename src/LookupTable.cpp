@@ -37,43 +37,49 @@ void LookupTable::setColours( const cv::Vec3b& c0, const cv::Vec3b& c1, const cv
 }   // end setColours
 
 
-void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, size_t ncols)
+void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& fc, size_t ncols)
 {
     const int N = std::max<int>(2, int(ncols));
     _setNumTableValues( N);
 
     // Convert to HSV colour space
-    const r3d::Colour shsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)scol[0], (int)scol[1], (int)scol[2]));
-    const r3d::Colour fhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)fcol[0], (int)fcol[1], (int)fcol[3]));
+    //const r3d::Colour scol = r3d::Colour::rgb2hsv( r3d::Colour( (int)sc[0], (int)sc[1], (int)sc[2]));
+    //const r3d::Colour fcol = r3d::Colour::rgb2hsv( r3d::Colour( (int)fc[0], (int)fc[1], (int)fc[2]));
+    const r3d::Colour scol = r3d::Colour( (int)sc[0], (int)sc[1], (int)sc[2]);
+    const r3d::Colour fcol = r3d::Colour( (int)fc[0], (int)fc[1], (int)fc[2]);
 
     const double stepProp = 1.0/N;
     double cstep[3];
-    cstep[0] = 0;//stepProp * (fhsv[0] - shsv[0]);
-    cstep[1] = stepProp * (fhsv[1] - shsv[1]);
-    cstep[2] = stepProp * (fhsv[2] - shsv[2]);
+    cstep[0] = stepProp * (fcol[0] - scol[0]);
+    cstep[1] = stepProp * (fcol[1] - scol[1]);
+    cstep[2] = stepProp * (fcol[2] - scol[2]);
 
     for ( int i = 0; i < N; ++i)
     {
-        r3d::Colour hsv = shsv;
-        hsv[0] += i*cstep[0];
-        hsv[1] += i*cstep[1];
-        hsv[2] += i*cstep[2];
-        _updateValue( i, r3d::Colour::hsv2rgb( hsv));
+        r3d::Colour col = scol;
+        col[0] += i*cstep[0];
+        col[1] += i*cstep[1];
+        col[2] += i*cstep[2];
+        //_updateValue( i, r3d::Colour::hsv2rgb( col));
+        _updateValue( i, col);
     }   // end for
 
     _buildTable();
 }   // end setColours
 
 
-void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, size_t ncols)
+void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& mc, const vtkColor3ub& fc, size_t ncols)
 {
     const int N = std::max<int>(2, int(ncols));
     _setNumTableValues( N);
 
     // Convert to HSV colour space
-    const r3d::Colour shsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)scol[0], (int)scol[1], (int)scol[2]));
-    const r3d::Colour mhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)mcol[0], (int)mcol[1], (int)mcol[2]));
-    const r3d::Colour fhsv = r3d::Colour::rgb2hsv( r3d::Colour( (int)fcol[0], (int)fcol[1], (int)fcol[2]));
+    //const r3d::Colour scol = r3d::Colour::rgb2hsv( r3d::Colour( (int)sc[0], (int)sc[1], (int)sc[2]));
+    //const r3d::Colour mcol = r3d::Colour::rgb2hsv( r3d::Colour( (int)mc[0], (int)mc[1], (int)mc[2]));
+    //const r3d::Colour fcol = r3d::Colour::rgb2hsv( r3d::Colour( (int)fc[0], (int)fc[1], (int)fc[2]));
+    const r3d::Colour scol = r3d::Colour( (int)sc[0], (int)sc[1], (int)sc[2]);
+    const r3d::Colour mcol = r3d::Colour( (int)mc[0], (int)mc[1], (int)mc[2]);
+    const r3d::Colour fcol = r3d::Colour( (int)fc[0], (int)fc[1], (int)fc[2]);
 
     int hcols = N / 2;    // Integer division
     const double stepProp = (N % 2 == 0) ?  2.0 / (N-1) : 2.0 / (N-2);
@@ -81,35 +87,40 @@ void LookupTable::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, 
     double cstep[3];
 
     // First half
-    cstep[0] = 0;//stepProp * (mhsv[0] - shsv[0]);
-    cstep[1] = stepProp * (mhsv[1] - shsv[1]);
-    cstep[2] = stepProp * (mhsv[2] - shsv[2]);
+    cstep[0] = stepProp * (mcol[0] - scol[0]);
+    cstep[1] = stepProp * (mcol[1] - scol[1]);
+    cstep[2] = stepProp * (mcol[2] - scol[2]);
     for ( int i = 0; i < hcols; ++i)
     {
-        r3d::Colour hsv = shsv;
-        hsv[0] += i*cstep[0];
-        hsv[1] += i*cstep[1];
-        hsv[2] += i*cstep[2];
-        _updateValue( i, r3d::Colour::hsv2rgb( hsv));
+        r3d::Colour col = scol;
+        col[0] += i*cstep[0];
+        col[1] += i*cstep[1];
+        col[2] += i*cstep[2];
+        //_updateValue( i, r3d::Colour::hsv2rgb( col));
+        _updateValue( i, col);
     }   // end for
 
     if ( N % 2 == 1)
-        _updateValue( hcols, r3d::Colour::hsv2rgb(mhsv));
+    {
+        //_updateValue( hcols, r3d::Colour::hsv2rgb(mcol));
+        _updateValue( hcols, mcol);
+    }   // end if
     else
         hcols--;
 
     // Second half
-    cstep[0] = 0;//stepProp * (fhsv[0] - mhsv[0]);
-    cstep[1] = stepProp * (fhsv[1] - mhsv[1]);
-    cstep[2] = stepProp * (fhsv[2] - mhsv[2]);
+    cstep[0] = stepProp * (fcol[0] - mcol[0]);
+    cstep[1] = stepProp * (fcol[1] - mcol[1]);
+    cstep[2] = stepProp * (fcol[2] - mcol[2]);
     int j = 0;
     for ( int i = N-1; i > hcols; --i, ++j)
     {
-        r3d::Colour hsv = fhsv;
-        hsv[0] -= j*cstep[0];
-        hsv[1] -= j*cstep[1];
-        hsv[2] -= j*cstep[2];
-        _updateValue( i, r3d::Colour::hsv2rgb( hsv));
+        r3d::Colour col = fcol;
+        col[0] -= j*cstep[0];
+        col[1] -= j*cstep[1];
+        col[2] -= j*cstep[2];
+        //_updateValue( i, r3d::Colour::hsv2rgb( col));
+        _updateValue( i, col);
     }   // end for
 
     _buildTable();

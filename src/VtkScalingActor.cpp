@@ -105,7 +105,10 @@ double VtkScalingActor::opacity() const { return _actor->GetProperty()->GetOpaci
 
 
 // Makes temporary updates to the actor.
-void VtkScalingActor::pokeTransform( const vtkMatrix4x4* vm) { _actor->PokeMatrix( const_cast<vtkMatrix4x4*>(vm));}
+void VtkScalingActor::pokeTransform( const vtkMatrix4x4* vm)
+{
+    _actor->PokeMatrix( const_cast<vtkMatrix4x4*>(vm));
+}   // end pokeTransform
 
 
 const vtkMatrix4x4* VtkScalingActor::transform() const { return _actor->GetMatrix();}
