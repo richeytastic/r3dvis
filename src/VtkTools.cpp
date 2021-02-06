@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@
 #include <vtkFloatArray.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkWindowToImageFilter.h>
-#include <vtkImageShiftScale.h>
-#include <vtkImageExport.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkTransform.h>
@@ -33,50 +31,112 @@ using r3dvis::Vec3f;
 using r3dvis::byte;
 
 
-void r3dvis::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
-                            int numColours, const vtkColor3ub& scol, const vtkColor3ub& fcol)
+r3d::Mesh::Ptr r3dvis::makeMesh( const vtkActor* actor)
 {
-    lut->SetNumberOfTableValues( numColours);
-    lut->Build();
-
-    float cstep[3];
-    cstep[0] = (float(fcol[0]) - float(scol[0]))/(numColours-1);
-    cstep[1] = (float(fcol[1]) - float(scol[1]))/(numColours-1);
-    cstep[2] = (float(fcol[2]) - float(scol[2]))/(numColours-1);
-    for ( int i = 0; i < numColours; ++i)
-    {
-        float rgb[3];
-        rgb[0] = (scol[0] + i*cstep[0])/255.0;
-        rgb[1] = (scol[1] + i*cstep[1])/255.0;
-        rgb[2] = (scol[2] + i*cstep[2])/255.0;
-        lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
-    }   // end for
-}   // end createColoursLookupTable
-
-
-r3d::Mesh::Ptr r3dvis::makeObject( const vtkActor* actor)
-{
-    r3d::Mesh::Ptr model = r3d::Mesh::create();
     vtkPolyData* pdata = getPolyData(actor);
     vtkPoints* points = pdata->GetPoints();
     vtkCellArray* faces = pdata->GetPolys();
 
+    r3d::Mesh::Ptr mesh = r3d::Mesh::create();
     std::unordered_map<int,int> vmap; // VTK to Mesh vertex IDs
     double p[3];
     const int npoints = points->GetNumberOfPoints();
     for ( int i = 0; i < npoints; ++i)
     {
         points->GetPoint( i, p);
-        vmap[i] = model->addVertex( p[0], p[1], p[2]);
+        vmap[i] = mesh->addVertex( p[0], p[1], p[2]);
     }   // end for
 
     faces->InitTraversal();
     vtkNew<vtkIdList> vidxs;
     vidxs->SetNumberOfIds(3);
-    while ( faces->GetNextCell( vidxs) > 0) // TODO not a thread-safe call - upgrade to using NewIterator() instead (VTK 9.0.0)
-        model->addFace( vmap[vidxs->GetId(0)], vmap[vidxs->GetId(1)], vmap[vidxs->GetId(2)]);
-    return model;
-}   // end makeObject
+    while ( faces->GetNextCell( vidxs) > 0) // TODO not thread-safe - use NewIterator() instead
+        mesh->addFace( vmap[vidxs->GetId(0)], vmap[vidxs->GetId(1)], vmap[vidxs->GetId(2)]);
+    return mesh;
+}   // end makeMesh
+
+
+bool r3dvis::mapActiveScalarsToMesh( const vtkActor *cactor, r3d::Mesh &mesh)
+{
+    vtkActor *actor = const_cast<vtkActor*>(cactor);
+    static const std::string WSTR = "[WARNING] r3dvis::mapActiveScalarsToMesh: ";
+    assert( mesh.hasSequentialIds());
+    if ( mesh.hasMaterials())
+    {
+        std::cerr << WSTR << "Removing existing material(s)!" << std::endl;
+        mesh.removeAllMaterials();
+    }   // end if
+
+    vtkMapper *mapper = actor->GetMapper();
+    mapper->MapScalars( getPolyData(actor), 1.0);
+    vtkImageData *vimg = mapper->GetColorTextureMap();
+    vtkFloatArray *uvs = mapper->GetColorCoordinates();
+
+    if ( !vimg || !uvs)
+    {
+        std::cerr << WSTR << "No active scalars mapped on actor!" << std::endl;
+        return false;
+    }   // end if
+
+    const int NT = uvs->GetNumberOfTuples();
+    // Depending on how the mesh was constructed (i.e. with or without a texture),
+    // it may have the same number of texture vertices on its actor as there are
+    // vertices in the mesh, or there may be UVs for every vertex on every face.
+    const int NV = int(mesh.numVtxs());
+    const int NF = int(mesh.numFaces());
+    if ( NT != 3*NF && NT != NV)
+    {
+        std::cerr << WSTR << "Vertex count mismatch!" << std::endl;
+        return false;
+    }   // end if
+
+    cv::Mat tximg = toCV( vimg); // Create the material texture map from the VTK colour image
+    if ( tximg.empty())
+    {
+        std::cerr << WSTR << "Unable to create texture map!" << std::endl;
+        return false;
+    }   // end if
+
+    if ( tximg.channels() == 4)
+        cv::cvtColor( tximg, tximg, cv::COLOR_RGBA2RGB);    // Convert to RGB
+
+    // Resize to minimum dimensions
+    cv::Mat rtximg;
+    //cv::resize( tximg, rtximg, cv::Size(64,64), 0, 0, cv::INTER_NEAREST);
+    cv::resize( tximg, rtximg, cv::Size(0,0), 300, 300, cv::INTER_AREA);
+    const int MID = mesh.addMaterial( rtximg); // Set the material texture map
+
+    // Set the UV texture coordinates for the material
+    double uv[2];
+    if ( NT == NV)  // One UV per vertex
+    {
+        std::vector<Vec2f> muvs(NV);
+        for ( int vid = 0; vid < NV; ++vid)
+        {
+            Vec2f &muv = muvs[vid];
+            uvs->GetTuple( vid, uv); muv[0] = uv[0]; muv[1] = uv[1];
+        }   // end for
+        for ( int fid = 0; fid < NF; ++fid)
+        {
+            const int *fvidxs = mesh.fvidxs(fid);
+            mesh.setOrderedFaceUVs( MID, fid, muvs[fvidxs[0]], muvs[fvidxs[1]], muvs[fvidxs[2]]);
+        }   // end for
+    }   // end if
+    else    // Three UVs per facet
+    {
+        Vec2f uv0, uv1, uv2;
+        int vtkPointId = 0;
+        for ( int fid = 0; fid < NF; ++fid)
+        {
+            uvs->GetTuple( vtkPointId++, uv); uv0[0] = uv[0]; uv0[1] = uv[1];
+            uvs->GetTuple( vtkPointId++, uv); uv1[0] = uv[0]; uv1[1] = uv[1];
+            uvs->GetTuple( vtkPointId++, uv); uv2[0] = uv[0]; uv2[1] = uv[1];
+            mesh.setOrderedFaceUVs( MID, fid, uv0, uv1, uv2);
+        }   // end for
+    }   // end else
+
+    return true;
+}   // end mapActiveScalarsToMesh
 
 
 vtkPolyData* r3dvis::getPolyData( const vtkActor* actor)
@@ -113,7 +173,7 @@ vtkSmartPointer<vtkImageImport> r3dvis::makeImageImporter( const cv::Mat img)
 
     vtkSmartPointer<vtkImageImport> imageImporter = vtkSmartPointer<vtkImageImport>::New();
     imageImporter->SetDataScalarTypeToUnsignedChar();
-    imageImporter->CopyImportVoidPointer( img.data, rows * cols * nchannels * sizeof(unsigned char));
+    imageImporter->CopyImportVoidPointer( img.data, rows * cols * nchannels * sizeof(byte));
     imageImporter->SetNumberOfScalarComponents( nchannels);
     imageImporter->SetWholeExtent( 0, cols-1, 0, rows-1, 0, 0);
     imageImporter->SetDataExtentToWholeExtent();
@@ -134,7 +194,8 @@ vtkSmartPointer<vtkTexture> r3dvis::convertToTexture( const cv::Mat& image, bool
     if ( (image.depth() != CV_8U) || !image.isContinuous() || ( numChannels != 1 && numChannels != 3))
     {
         std::cerr << "[WARNING] r3dvis::convertToTexture(): Unable to create texture from image!" << std::endl;
-        return vtkSmartPointer<vtkTexture>();
+        //return vtkSmartPointer<vtkTexture>();
+        return nullptr;
     }   // end if
 
     // Flip the input image vertically.
@@ -210,6 +271,52 @@ vtkSmartPointer<vtkPolyData> r3dvis::generateNormals( vtkSmartPointer<vtkPolyDat
 }   // end generateNormals
 
 
+cv::Mat r3dvis::toCV( const vtkImageData *mvtkimg)
+{
+    vtkImageData *vtkimg = const_cast<vtkImageData*>( mvtkimg);
+    int dims[3];    // Width, height, depth
+    // What the hell is up with VTK just ignoring the use of const on member functions...
+    vtkimg->GetDimensions( dims);
+    const int cols = dims[0];
+    const int rows = dims[1];
+
+    cv::Mat img;
+
+    int nc = vtkimg->GetNumberOfScalarComponents();
+    if ( nc == 3 || nc == 4)    // RGB or RGBA
+    {
+        img = cv::Mat( rows, cols, CV_8UC(nc));
+        for ( int i = 0; i < rows; ++i)
+        {
+            byte *imgRow = img.ptr<byte>(rows-i-1); // Flip vertically for OpenCV
+            for ( int j = 0; j < cols; ++j)
+            {
+                const byte *ipxl = static_cast<byte*>(vtkimg->GetScalarPointer(j,i,0));
+                byte *pxl = &imgRow[nc*j];
+                // Reverse the red/blue channel order
+                pxl[0] = ipxl[2];
+                pxl[1] = ipxl[1];
+                pxl[2] = ipxl[0];
+                if ( nc == 4)
+                    pxl[3] = ipxl[3];   // Alpha
+            }   // end for
+        }   // end for
+    }   // end if
+    else if ( nc == 1)
+    {
+        img = cv::Mat_<float>( rows, cols);
+        for ( int i = 0; i < rows; ++i)
+        {
+            float *imgRow = img.ptr<float>(rows-i-1); // Flip vertically for OpenCV
+            for ( int j = 0; j < cols; ++j)
+                imgRow[j] = *static_cast<float*>(vtkimg->GetScalarPointer(j,i,0));
+        }   // end for
+    }   // end else if
+
+    return img;
+}   // end toCV
+
+
 cv::Mat_<cv::Vec3b> r3dvis::extractBGR( vtkRenderWindow *rwin)
 {
     vtkNew<vtkWindowToImageFilter> filter;
@@ -217,29 +324,7 @@ cv::Mat_<cv::Vec3b> r3dvis::extractBGR( vtkRenderWindow *rwin)
     filter->SetInputBufferTypeToRGB();
     filter->Modified();
     filter->Update();
-    vtkImageData *vtkimg = filter->GetOutput();
-    int dims[3];    // Width, height, depth
-    vtkimg->GetDimensions( dims);
-    const int cols = dims[0];
-    const int rows = dims[1];
-    assert( vtkimg->GetNumberOfScalarComponents() == 3);    // RGB
-
-    cv::Mat_<cv::Vec3b> img( rows, cols);
-    for ( int i = 0; i < rows; ++i)
-    {
-        cv::Vec3b *imgRow = img.ptr<cv::Vec3b>(rows-i-1); // Flip vertically for OpenCV
-        for ( int j = 0; j < cols; ++j)
-        {
-            const unsigned char *ipxl = static_cast<unsigned char*>(vtkimg->GetScalarPointer(j,i,0));
-            cv::Vec3b &pxl = imgRow[j];
-            // Reverse the red/blue channel order
-            pxl[0] = ipxl[2];
-            pxl[1] = ipxl[1];
-            pxl[2] = ipxl[0];
-        }   // end for
-    }   // end for
-
-    return img;
+    return toCV( filter->GetOutput());
 }   // end extractBGR
 
 
@@ -250,22 +335,7 @@ cv::Mat_<float> r3dvis::extractZ( vtkRenderWindow *rwin)
     filter->SetInputBufferTypeToZBuffer();
     filter->Modified();
     filter->Update();
-    vtkImageData *vtkimg = filter->GetOutput();
-    int dims[3];    // Width, height, depth
-    vtkimg->GetDimensions( dims);
-    const int cols = dims[0];
-    const int rows = dims[1];
-    assert( vtkimg->GetNumberOfScalarComponents() == 1);
-
-    cv::Mat_<float> img( rows, cols);
-    for ( int i = 0; i < rows; ++i)
-    {
-        float *imgRow = img.ptr<float>(rows-i-1); // Flip vertically for OpenCV
-        for ( int j = 0; j < cols; ++j)
-            imgRow[j] = *static_cast<float*>(vtkimg->GetScalarPointer(j,i,0));
-    }   // end for
-
-    return img;
+    return toCV( filter->GetOutput());
 }   // end extractZ
 
 

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <vtkCamera.h>
 #include <vtkTexture.h>
 #include <vtkPolyData.h>
+#include <vtkImageData.h>
 #include <vtkMatrix4x4.h>
 #include <vtkFloatArray.h>
 #include <vtkImageImport.h>
@@ -38,18 +39,21 @@
 namespace r3dvis {
 
 using byte = unsigned char;
+using Vec2f = Eigen::Vector2f;
 using Vec3f = Eigen::Vector3f;
 
-// Set a provided lookup table of colours from startCol to endCol (inclusive).
-// Colour values should be specified in RGB order.
-r3dvis_EXPORT void setColoursLookupTable( vtkSmartPointer<vtkLookupTable>,
-                                        int numColours, const vtkColor3ub& startCol, const vtkColor3ub& endCol);
-
 // Make an object (no texture) from an actor's polydata.
-r3dvis_EXPORT r3d::Mesh::Ptr makeObject( const vtkActor*);
+r3dvis_EXPORT r3d::Mesh::Ptr makeMesh( const vtkActor*);
 
 // Return poly data from actor
 r3dvis_EXPORT vtkPolyData* getPolyData( const vtkActor*);
+
+// Map the currently active scalar data on the actor to a texture which is then set
+// as the texture on the given mesh. Any existing materials on the given mesh are
+// removed. The provided mesh must have sequential vertex/face indices. Returns
+// false if the number of texture UVs in the given actor is not exactly three
+// times the number of faces in the given mesh. Returns true on success.
+r3dvis_EXPORT bool mapActiveScalarsToMesh( const vtkActor*, r3d::Mesh&);
 
 // Transform the point data on the given actor using the given matrix.
 // If the given matrix is null, the actor's internal (GPU) matrix is used.
@@ -92,6 +96,9 @@ r3dvis_EXPORT vtkSmartPointer<vtkFloatArray> makeNormals( const r3d::Curvature&)
 // Dump a colour or Z buffer image from the provided vtkRenderWindow.
 r3dvis_EXPORT cv::Mat_<cv::Vec3b> extractBGR( vtkRenderWindow*);
 r3dvis_EXPORT cv::Mat_<float> extractZ( vtkRenderWindow*);
+
+// Convert the given VTK image data to an OpenCV image.
+r3dvis_EXPORT cv::Mat toCV( const vtkImageData*);
 
 r3dvis_EXPORT void printCameraDetails( vtkCamera*, std::ostream&);    // Print camera details to the given stream
 
