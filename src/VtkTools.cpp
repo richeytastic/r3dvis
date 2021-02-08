@@ -56,6 +56,19 @@ r3d::Mesh::Ptr r3dvis::makeMesh( const vtkActor* actor)
 }   // end makeMesh
 
 
+namespace {
+r3dvis::Vec2f roundUV( const double *uv)
+{
+    // Set the UV texture coordinates for the material. There's a rounding bug causing
+    // an overflow in VTK that causes incorrect colour mapping if MAX_UV is 1.0f.
+    static const float MAX_UV = 0.999f;
+    static const float MIN_UV = 0.0f;
+    return r3dvis::Vec2f( std::min<float>( MAX_UV, std::max<float>( MIN_UV, uv[0])),
+                          std::min<float>( MAX_UV, std::max<float>( MIN_UV, uv[1])));
+}   // end roundUV
+}   // end namespace
+
+
 bool r3dvis::mapActiveScalarsToMesh( const vtkActor *cactor, r3d::Mesh &mesh)
 {
     vtkActor *actor = const_cast<vtkActor*>(cactor);
@@ -100,21 +113,18 @@ bool r3dvis::mapActiveScalarsToMesh( const vtkActor *cactor, r3d::Mesh &mesh)
     if ( tximg.channels() == 4)
         cv::cvtColor( tximg, tximg, cv::COLOR_RGBA2RGB);    // Convert to RGB
 
-    // Resize to minimum dimensions
     cv::Mat rtximg;
-    //cv::resize( tximg, rtximg, cv::Size(64,64), 0, 0, cv::INTER_NEAREST);
-    cv::resize( tximg, rtximg, cv::Size(0,0), 300, 300, cv::INTER_AREA);
+    cv::resize( tximg, rtximg, cv::Size(0,0), 4, 4, cv::INTER_AREA);    // Resize slightly for colour accuracy
     const int MID = mesh.addMaterial( rtximg); // Set the material texture map
 
-    // Set the UV texture coordinates for the material
     double uv[2];
     if ( NT == NV)  // One UV per vertex
     {
         std::vector<Vec2f> muvs(NV);
         for ( int vid = 0; vid < NV; ++vid)
         {
-            Vec2f &muv = muvs[vid];
-            uvs->GetTuple( vid, uv); muv[0] = uv[0]; muv[1] = uv[1];
+            uvs->GetTuple( vid, uv);
+            muvs[vid] = roundUV( uv);
         }   // end for
         for ( int fid = 0; fid < NF; ++fid)
         {
@@ -128,9 +138,9 @@ bool r3dvis::mapActiveScalarsToMesh( const vtkActor *cactor, r3d::Mesh &mesh)
         int vtkPointId = 0;
         for ( int fid = 0; fid < NF; ++fid)
         {
-            uvs->GetTuple( vtkPointId++, uv); uv0[0] = uv[0]; uv0[1] = uv[1];
-            uvs->GetTuple( vtkPointId++, uv); uv1[0] = uv[0]; uv1[1] = uv[1];
-            uvs->GetTuple( vtkPointId++, uv); uv2[0] = uv[0]; uv2[1] = uv[1];
+            uvs->GetTuple( vtkPointId++, uv); uv0 = roundUV(uv);
+            uvs->GetTuple( vtkPointId++, uv); uv1 = roundUV(uv);
+            uvs->GetTuple( vtkPointId++, uv); uv2 = roundUV(uv);
             mesh.setOrderedFaceUVs( MID, fid, uv0, uv1, uv2);
         }   // end for
     }   // end else

@@ -28,6 +28,10 @@ OffscreenMeshViewer::OffscreenMeshViewer( const cv::Size& dims, float rng)
 {
     _viewer = Viewer::create(true/*offscreen*/);
     _viewer->renderer()->UseFXAAOn();
+    _viewer->renderer()->SetTwoSidedLighting(true);
+    _viewer->renderer()->SetAutomaticLightCreation(false);
+    Light hlght;   // Simple headlight
+    _viewer->renderer()->AddLight( hlght.light);
     setSize(dims);
     setCamera( CameraParams( r3d::Vec3f( 0, 0, rng)));
 }   // end ctor
