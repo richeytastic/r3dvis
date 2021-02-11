@@ -38,12 +38,13 @@ public:
 
     void setPosition( double x, double y);
     void setHeight( double);
+    void setWidth( double);
 
     void setNumLabels( int);
     void setLookupTable( const vtkLookupTable*);
 
-    inline const vtkProp *prop() const { return _legend;}
-    inline vtkProp *prop() { return _legend;}
+    inline const vtkScalarBarActor *prop() const { return _legend.Get();}
+    inline vtkScalarBarActor *prop() { return _legend.Get();}
 
 private:
     vtkNew<vtkScalarBarActor> _legend;

@@ -35,6 +35,9 @@ ScalarLegend::ScalarLegend()
     _legend->GetTitleTextProperty()->SetFontSize(16);
     _legend->GetTitleTextProperty()->SetBold(false);
     _legend->GetTitleTextProperty()->SetItalic(false);
+
+    //_legend->SetTextPositionToPrecedeScalarBar();
+    _legend->SetOrientationToVertical();
 }   // end ctor
 
 
@@ -45,9 +48,11 @@ void ScalarLegend::setTitle( const std::string& title) { _legend->SetTitle( titl
 void ScalarLegend::setNumLabels( int n) { _legend->SetNumberOfLabels( n);}
 void ScalarLegend::setPosition( double x, double y) { _legend->SetPosition(x,y);}
 void ScalarLegend::setHeight( double v) { _legend->SetHeight(v);}
+void ScalarLegend::setWidth( double v) { _legend->SetWidth(v);}
 
 void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 {
+    _legend->SetLookupTable( const_cast<vtkLookupTable*>(lut));
     //const double minv = lut->GetTableRange()[0];
     //const double maxv = lut->GetTableRange()[1];
 
@@ -58,7 +63,6 @@ void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
     std::ostringstream oss;
     oss << "% " << maxWidth << "." << ndecimals << "f";
     _legend->SetLabelFormat( oss.str().c_str());
-    _legend->SetLookupTable( const_cast<vtkLookupTable*>(lut));
 }   // end setLookupTable
 
 
