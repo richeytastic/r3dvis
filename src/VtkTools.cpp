@@ -59,10 +59,10 @@ r3d::Mesh::Ptr r3dvis::makeMesh( const vtkActor* actor)
 namespace {
 r3dvis::Vec2f roundUV( const double *uv)
 {
-    // Set the UV texture coordinates for the material. There's a rounding bug causing
-    // an overflow in VTK that causes incorrect colour mapping if MAX_UV is 1.0f.
+    // Set the UV texture coordinates for the material. A rounding bug
+    // causes wrong colour mapping if MAX_UV = 1.0f and MIN_UV = 0.0f.
     static const float MAX_UV = 0.999f;
-    static const float MIN_UV = 0.0f;
+    static const float MIN_UV = 0.001f;
     return r3dvis::Vec2f( std::min<float>( MAX_UV, std::max<float>( MIN_UV, uv[0])),
                           std::min<float>( MAX_UV, std::max<float>( MIN_UV, uv[1])));
 }   // end roundUV
@@ -113,8 +113,8 @@ bool r3dvis::mapActiveScalarsToMesh( const vtkActor *cactor, r3d::Mesh &mesh)
     if ( tximg.channels() == 4)
         cv::cvtColor( tximg, tximg, cv::COLOR_RGBA2RGB);    // Convert to RGB
 
-    cv::Mat rtximg;
-    cv::resize( tximg, rtximg, cv::Size(0,0), 4, 4, cv::INTER_AREA);    // Resize slightly for colour accuracy
+    cv::Mat rtximg; // Resize for colour mapping accuracy
+    cv::resize( tximg, rtximg, cv::Size(4096,4096), 0, 0, cv::INTER_AREA);
     const int MID = mesh.addMaterial( rtximg); // Set the material texture map
 
     double uv[2];

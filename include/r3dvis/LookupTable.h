@@ -21,16 +21,28 @@
 #include "r3dvis_Export.h"
 #include <r3d/Colour.h>
 #include <opencv2/opencv.hpp>
+#include <vtkSmartPointer.h>
 #include <vtkLookupTable.h>
-#include <vtkRenderer.h>
 #include <vtkColor.h>
-#include <unordered_map>
 
 namespace r3dvis {
 
 class r3dvis_EXPORT LookupTable
 {
 public:
+    LookupTable() {}
+
+    // Range of ncols between and min and max colour.
+    LookupTable( const r3d::Colour &minCol, const r3d::Colour &maxCol, size_t ncols);
+
+    // Range of ncols from minCol through midCol to maxCol.
+    LookupTable( const r3d::Colour &minCol,
+                 const r3d::Colour &midCol,
+                 const r3d::Colour &maxCol, size_t ncols);
+
+    // Return the colour at the given index.
+    const r3d::Colour &colour( int idx) const;
+
     // Set simple colour range from minCol to maxCol over ncols.
     void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, size_t ncols);
 
@@ -49,13 +61,10 @@ public:
                      const cv::Vec3b& maxCol,
                      size_t ncols);
 
-    inline const vtkLookupTable* vtk() { return _lut;}
+    vtkSmartPointer<vtkLookupTable> toVTK() const;
 
 private:
-    vtkNew<vtkLookupTable> _lut;
-    void _setNumTableValues( int);
-    void _updateValue( int, const r3d::Colour&);
-    void _buildTable();
+    std::vector<r3d::Colour> _cols;
 };  // end class
 
 }   // end namespace
