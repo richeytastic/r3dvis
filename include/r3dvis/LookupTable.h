@@ -43,6 +43,9 @@ public:
     // Return the colour at the given index.
     const r3d::Colour &colour( int idx) const;
 
+    // Return all colours in vector.
+    const std::vector<r3d::Colour> &colours() const { return _cols;}
+
     // Set simple colour range from minCol to maxCol over ncols.
     void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, size_t ncols);
 
