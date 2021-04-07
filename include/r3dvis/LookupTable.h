@@ -19,7 +19,7 @@
 #define r3dvis_LOOKUP_TABLE_H
 
 #include "r3dvis_Export.h"
-#include <r3d/Colour.h>
+#include <rimg/Colour.h>
 #include <opencv2/opencv.hpp>
 #include <vtkSmartPointer.h>
 #include <vtkLookupTable.h>
@@ -33,18 +33,18 @@ public:
     LookupTable() {}
 
     // Range of ncols between and min and max colour.
-    LookupTable( const r3d::Colour &minCol, const r3d::Colour &maxCol, size_t ncols);
+    LookupTable( const rimg::Colour &minCol, const rimg::Colour &maxCol, size_t ncols);
 
     // Range of ncols from minCol through midCol to maxCol.
-    LookupTable( const r3d::Colour &minCol,
-                 const r3d::Colour &midCol,
-                 const r3d::Colour &maxCol, size_t ncols);
+    LookupTable( const rimg::Colour &minCol,
+                 const rimg::Colour &midCol,
+                 const rimg::Colour &maxCol, size_t ncols);
 
     // Return the colour at the given index.
-    const r3d::Colour &colour( int idx) const;
+    const rimg::Colour &colour( int idx) const;
 
     // Return all colours in vector.
-    const std::vector<r3d::Colour> &colours() const { return _cols;}
+    const std::vector<rimg::Colour> &colours() const { return _cols;}
 
     // Set simple colour range from minCol to maxCol over ncols.
     void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, size_t ncols);
@@ -67,7 +67,7 @@ public:
     vtkSmartPointer<vtkLookupTable> toVTK() const;
 
 private:
-    std::vector<r3d::Colour> _cols;
+    std::vector<rimg::Colour> _cols;
 };  // end class
 
 }   // end namespace

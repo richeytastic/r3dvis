@@ -19,7 +19,7 @@
 using r3dvis::LookupTable;
 
 
-LookupTable::LookupTable( const r3d::Colour &c0, const r3d::Colour &c1, size_t nc)
+LookupTable::LookupTable( const rimg::Colour &c0, const rimg::Colour &c1, size_t nc)
 {
     const vtkColor3ub v0( c0.ired(), c0.igreen(), c0.iblue());
     const vtkColor3ub v1( c1.ired(), c1.igreen(), c1.iblue());
@@ -27,7 +27,7 @@ LookupTable::LookupTable( const r3d::Colour &c0, const r3d::Colour &c1, size_t n
 }   // end ctor
 
 
-LookupTable::LookupTable( const r3d::Colour &c0, const r3d::Colour &c1, const r3d::Colour &c2, size_t nc)
+LookupTable::LookupTable( const rimg::Colour &c0, const rimg::Colour &c1, const rimg::Colour &c2, size_t nc)
 {
     const vtkColor3ub v0( c0.ired(), c0.igreen(), c0.iblue());
     const vtkColor3ub v1( c1.ired(), c1.igreen(), c1.iblue());
@@ -58,8 +58,8 @@ void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& fc, size
     const int N = std::max<int>(2, int(ncols));
     _cols.resize(N);
 
-    const r3d::Colour scol = r3d::Colour( (int)sc[0], (int)sc[1], (int)sc[2]);
-    const r3d::Colour fcol = r3d::Colour( (int)fc[0], (int)fc[1], (int)fc[2]);
+    const rimg::Colour scol = rimg::Colour( (int)sc[0], (int)sc[1], (int)sc[2]);
+    const rimg::Colour fcol = rimg::Colour( (int)fc[0], (int)fc[1], (int)fc[2]);
 
     const double stepProp = 1.0/N;
     double cstep[3];
@@ -68,7 +68,7 @@ void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& fc, size
     cstep[2] = stepProp * (fcol[2] - scol[2]);
 
     for ( int i = 0; i < N; ++i)
-        _cols[i] = r3d::Colour( scol[0] + i*cstep[0], scol[1] + i*cstep[1], scol[2] + i*cstep[2]);
+        _cols[i] = rimg::Colour( scol[0] + i*cstep[0], scol[1] + i*cstep[1], scol[2] + i*cstep[2]);
 }   // end setColours
 
 
@@ -77,9 +77,9 @@ void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& mc, cons
     const int N = std::max<int>(2, int(ncols));
     _cols.resize(N);
 
-    const r3d::Colour scol = r3d::Colour( (int)sc[0], (int)sc[1], (int)sc[2]);
-    const r3d::Colour mcol = r3d::Colour( (int)mc[0], (int)mc[1], (int)mc[2]);
-    const r3d::Colour fcol = r3d::Colour( (int)fc[0], (int)fc[1], (int)fc[2]);
+    const rimg::Colour scol = rimg::Colour( (int)sc[0], (int)sc[1], (int)sc[2]);
+    const rimg::Colour mcol = rimg::Colour( (int)mc[0], (int)mc[1], (int)mc[2]);
+    const rimg::Colour fcol = rimg::Colour( (int)fc[0], (int)fc[1], (int)fc[2]);
 
     int hcols = N / 2;    // Integer division
     const double stepProp = (N % 2 == 0) ?  2.0 / (N-1) : 2.0 / (N-2);
@@ -91,7 +91,7 @@ void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& mc, cons
     cstep[1] = stepProp * (mcol[1] - scol[1]);
     cstep[2] = stepProp * (mcol[2] - scol[2]);
     for ( int i = 0; i < hcols; ++i)
-        _cols[i] = r3d::Colour( scol[0] + i*cstep[0], scol[1] + i*cstep[1], scol[2] + i*cstep[2]);
+        _cols[i] = rimg::Colour( scol[0] + i*cstep[0], scol[1] + i*cstep[1], scol[2] + i*cstep[2]);
 
     if ( N % 2 == 1)
         _cols[hcols] = mcol;
@@ -104,7 +104,7 @@ void LookupTable::setColours( const vtkColor3ub& sc, const vtkColor3ub& mc, cons
     cstep[2] = stepProp * (fcol[2] - mcol[2]);
     int j = 0;
     for ( int i = N-1; i > hcols; --i, ++j)
-        _cols[i] = r3d::Colour( fcol[0] - j*cstep[0], fcol[1] - j*cstep[1], fcol[2] - j*cstep[2]);
+        _cols[i] = rimg::Colour( fcol[0] - j*cstep[0], fcol[1] - j*cstep[1], fcol[2] - j*cstep[2]);
 }   // end setColours
 
 
@@ -115,7 +115,7 @@ vtkSmartPointer<vtkLookupTable> LookupTable::toVTK() const
     lut->SetNumberOfTableValues( ncols);
     for ( int i = 0; i < ncols; ++i)
     {
-        const r3d::Colour &rgb = _cols.at(i);
+        const rimg::Colour &rgb = _cols.at(i);
         lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
     }   // end for
     lut->Build();
