@@ -344,7 +344,7 @@ vtkSmartPointer<vtkPolyData> createSequencePolyData( const Mesh& model)
     vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
     pd->SetPoints( points);
     pd->SetPolys( faces);
-    //pd = r3dvis::generateNormals( pd);    // Required for interpolated shading
+    //pd = r3dvis::generateNormals( pd);    // Required for interpolated shading  // TMP
     return pd;
 }   // end createSequencePolyData
 
@@ -406,7 +406,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateActor( const Mesh& model)
     uvs->SetNumberOfTuples( NP);
     uvs->SetName( "TCoords_0");
 
-    /*
+    /*/ TMP
     // We need to map vertex normals to the texture mapped points. We can't use VTKs built in normal generator algorithm
     // directly on the cell array being populated here because this expects it to be connected with common vertex IDs
     // which it is not because VTK doesn't do per polygon texture mapping (which is really annoying). To hack around this,
@@ -443,7 +443,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateActor( const Mesh& model)
             else
                 uvs->SetTuple2( vtkPointId, 0.0, 0.0);
 
-            /*
+            /*// TMP
             cnrms->GetTuple( vidx, nv);
             nrm->SetTuple3( vtkPointId, static_cast<float>(nv[0]), static_cast<float>(nv[1]), static_cast<float>(nv[2]));
             */
@@ -457,7 +457,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateActor( const Mesh& model)
     pd->SetPoints( points);
     pd->SetPolys( faces);
     pd->GetPointData()->SetTCoords( uvs);
-    //pd->GetPointData()->SetNormals( nrm);  // Required for interpolated shading
+    //pd->GetPointData()->SetNormals( nrm);  // Required for interpolated shading   // TMP
 
     vtkSmartPointer<vtkActor> actor = makeActor(pd);
     actor->SetTexture( texture);

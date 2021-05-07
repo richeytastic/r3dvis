@@ -119,7 +119,7 @@ bool OffscreenMeshViewer::pick( const cv::Point2f& p) const
 
 r3d::Vec3f OffscreenMeshViewer::worldPosition( const cv::Point2f& p) const
 {
-    return picker()->pickWorldPosition(p);
+    return picker()->pickPosition(p);
 }   // end worldPosition
 
 
