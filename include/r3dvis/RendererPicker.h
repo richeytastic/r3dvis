@@ -40,11 +40,6 @@ public:
     // Calls ResetCameraClippingRange() on the provided vtkRenderer to ensure picking accuracy.
     RendererPicker( vtkRenderer*, PointOrigin po=BOTTOM_LEFT, double tolerance=0.0005);
 
-    // Given array of 2D pixel coords and a specified actor, find the cell IDs
-    // being addressed, returning the number appended to cellIds.
-    int pickActorCells( const std::vector<cv::Point>& points2d, const vtkProp* actor,
-                        std::vector<int>& cellIds) const;
-
     // Given a 2D point, find the actor being pointed to. Returns null if no actor found.
     const vtkActor* pickActor( const cv::Point&) const;
     const vtkActor* pickActor( const cv::Point2f&) const;
@@ -53,25 +48,19 @@ public:
     const vtkActor* pickActor( const cv::Point& point, const std::vector<const vtkProp*>&) const;
     const vtkActor* pickActor( const cv::Point2f&, const std::vector<const vtkProp*>&) const;
 
-    // Pick an actor's cell returning its ID. Returns -1 if no cell found.
-    int pickCell( const cv::Point&) const;
-    int pickCell( const cv::Point2f&) const;
-
     // Find the intersecting position on the given actor and 2D point.
     // Returns true iff a valid intersection of the actor is found.
     // On (true) return, the provided Vec3f is set to the intersection point.
+    // Slower but more accurate than the non-actor specific version below.
     bool pickPosition( const vtkProp*, const cv::Point&, r3d::Vec3f&) const;
     bool pickPosition( const vtkProp*, const cv::Point2f&, r3d::Vec3f&) const;
 
     // Given a 2D point, find the intersecting world position. Note that a position
     // in space is always returned even if the point does not intersect with a prop/actor!
+    // This is hardware accelerated and will return the first point intersected on *any*
+    // pickable and not-transparent actor! Use only to get estimates of position in space.
     r3d::Vec3f pickPosition( const cv::Point&) const;
     r3d::Vec3f pickPosition( const cv::Point2f&) const;
-
-    // Pick the normal vector to the surface at the given point.
-    // If no 3D point intersects, return the zero vector.
-    r3d::Vec3f pickNormal( const cv::Point&) const;
-    r3d::Vec3f pickNormal( const cv::Point2f&) const;
 
     // Project v to the rendering image plane. Point is returned using
     // the coordinates origin set in the constructor.

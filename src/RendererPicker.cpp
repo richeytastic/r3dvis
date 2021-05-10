@@ -16,11 +16,12 @@
  ************************************************************************/
 
 #include <RendererPicker.h>
+#include <vtkProp3DCollection.h>
 #include <vtkCellPicker.h>
 #include <vtkPropPicker.h>
-#include <vtkPointPicker.h>
 #include <vtkSmartPointer.h>
 #include <vtkCoordinate.h>
+#include <vtkPoints.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
@@ -63,38 +64,6 @@ cv::Point changeOriginOfPoint( vtkRenderer* ren, const cv::Point& p, RendererPic
     return cv::Point( p.x, ren->GetSize()[1] - p.y - 1);
 }   // end changeOriginOfPoint
 }   // end namespace
-
-
-int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
-                                    const vtkProp *actor, std::vector<int>& cellIds) const
-{
-    if ( !actor)
-        return 0;
-
-    vtkNew<vtkCellPicker> cellPicker;
-    vtkNew<vtkPropPicker> propPicker;
-    vtkNew<vtkPropCollection> pickFrom;
-    pickFrom->AddItem( const_cast<vtkProp*>(actor));
-    cellPicker->SetTolerance( _tolerance);
-
-    std::unordered_set<int> setCellIds;   // Avoid duplicate cell IDs being picked
-    for ( const cv::Point& p : points2d)
-    {
-        if ( !_isValidPoint( _ren, p))
-            continue;
-
-        const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-        propPicker->PickProp( np.x, np.y, _ren, pickFrom);
-        if ( propPicker->GetActor() == actor)
-        {
-            cellPicker->Pick( np.x, np.y, 0, _ren);
-            setCellIds.insert( cellPicker->GetCellId());
-        }   // end if
-    }   // end for
-
-    cellIds.insert( cellIds.end(), setCellIds.begin(), setCellIds.end());
-    return (int)setCellIds.size();
-}   // end pickActorCells
 
 
 const vtkActor* RendererPicker::pickActor( const cv::Point& p) const
@@ -151,31 +120,18 @@ const vtkActor* RendererPicker::pickActor( const cv::Point2f& p,
 { return pickActor( _toPxls(_ren, p), possActors);} 
 
 
-int RendererPicker::pickCell( const cv::Point& p) const
-{
-    if ( !_isValidPoint( _ren, p))
-        return -1;
-    const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    vtkNew<vtkCellPicker> picker;
-    picker->SetTolerance( _tolerance);
-    picker->Pick( np.x, np.y, 0, _ren);
-    const int cid = picker->GetCellId();
-    return cid;
-}   // end pickCell
-
-
-int RendererPicker::pickCell( const cv::Point2f& p) const { return pickCell( _toPxls(_ren, p));}
-
-
 Vec3f RendererPicker::pickPosition( const cv::Point& p) const
 {
     if ( !_isValidPoint( _ren, p))
         return Vec3f::Zero();
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
     vtkNew<vtkPropPicker> picker;   // Hardware accelerated
-    picker->Pick( np.x, np.y, 0, _ren);
-    const double* wpos = picker->GetPickPosition();
-    const Vec3f v( (float)wpos[0], (float)wpos[1], (float)wpos[2]);
+    Vec3f v = Vec3f::Zero();
+    if ( picker->Pick( np.x, np.y, 0, _ren))
+    {
+        const double* wpos = picker->GetPickPosition();
+        v = Vec3f( (float)wpos[0], (float)wpos[1], (float)wpos[2]);
+    }   // end if
     return v;
 }   // end pickPosition
 
@@ -191,14 +147,19 @@ bool RendererPicker::pickPosition( const vtkProp *actor, const cv::Point &p, Vec
     if ( !actor || !_isValidPoint( _ren, p))
         return false;
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    vtkNew<vtkPropPicker> picker;
-    vtkNew<vtkPropCollection> pickFrom;
-    pickFrom->AddItem( const_cast<vtkProp*>(actor));
-    if ( !picker->PickProp( np.x, np.y, _ren, pickFrom))
-        return false;
-    const double* wpos = picker->GetPickPosition();
-    v = Vec3f( (float)wpos[0], (float)wpos[1], (float)wpos[2]);
-    return true;
+
+    // Get position using vtkCellPicker
+    vtkNew<vtkCellPicker> cellPicker;
+    cellPicker->SetTolerance(_tolerance);
+    cellPicker->Pick( np.x, np.y, 0, _ren);
+    const int i = cellPicker->GetProp3Ds()->IsItemPresent( const_cast<vtkProp*>(actor));
+    if ( i > 0)
+    {
+        double wpos[3];
+        cellPicker->GetPickedPositions()->GetPoint( i-1, wpos);
+        v = Vec3f( (float)wpos[0], (float)wpos[1], (float)wpos[2]);
+    }   // end if
+    return i > 0;
 }   // end pickPosition
 
 
@@ -206,25 +167,6 @@ bool RendererPicker::pickPosition( const vtkProp *actor, const cv::Point2f &p, V
 {
     return pickPosition( actor, _toPxls(_ren, p), v);
 }   // end pickPosition
-
-
-Vec3f RendererPicker::pickNormal( const cv::Point& p) const
-{
-    if ( !_isValidPoint( _ren, p))
-        return Vec3f::Zero();
-    const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    vtkNew<vtkCellPicker> picker;
-    Vec3f v(0,0,0);
-    if ( picker->Pick( np.x, np.y, 0, _ren))
-    {
-        const double* normal = picker->GetPickNormal();
-        v = Vec3f( (float)normal[0], (float)normal[1], (float)normal[2]);
-    }   // end if
-    return v;
-}   // end pickNormal
-
-
-Vec3f RendererPicker::pickNormal( const cv::Point2f& p) const { return pickNormal( _toPxls(_ren, p));}
 
 
 cv::Point RendererPicker::projectToImagePlane( const Vec3f& v) const
