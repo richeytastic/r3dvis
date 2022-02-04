@@ -21,7 +21,6 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/KeyPresser.h"
     "${INCLUDE_F}/LookupTable.h"
     "${INCLUDE_F}/OffscreenMeshViewer.h"
-    "${INCLUDE_F}/PointPlacer.h"
     "${INCLUDE_F}/RendererPicker.h"
     "${INCLUDE_F}/ScalarLegend.h"
     #"${INCLUDE_F}/SnapshotKeyPresser.h"
@@ -36,23 +35,22 @@ set( INCLUDE_FILES
     )
 
 set( SRC_FILES
-    ${SRC_DIR}/Axes
-    #${SRC_DIR}/ImageGrabber
-    #${SRC_DIR}/InteractorC1
-    ${SRC_DIR}/KeyPresser
-    ${SRC_DIR}/LookupTable
-    ${SRC_DIR}/OffscreenMeshViewer
-    ${SRC_DIR}/PointPlacer
-    ${SRC_DIR}/RendererPicker
-    ${SRC_DIR}/ScalarLegend
-    #${SRC_DIR}/SnapshotKeyPresser
-    ${SRC_DIR}/SurfaceMapper
-    ${SRC_DIR}/Viewer
-    ${SRC_DIR}/ViewerProjector
-    ${SRC_DIR}/VtkActorCreator
-    ${SRC_DIR}/VtkScalingActor
-    ${SRC_DIR}/VtkVectorField
-    ${SRC_DIR}/VtkTools
+    "${SRC_DIR}/Axes.cpp"
+    #"${SRC_DIR}/ImageGrabber.cpp"
+    #"${SRC_DIR}/InteractorC1.cpp"
+    "${SRC_DIR}/KeyPresser.cpp"
+    "${SRC_DIR}/LookupTable.cpp"
+    "${SRC_DIR}/OffscreenMeshViewer.cpp"
+    "${SRC_DIR}/RendererPicker.cpp"
+    "${SRC_DIR}/ScalarLegend.cpp"
+    #"${SRC_DIR}/SnapshotKeyPresser.cpp"
+    "${SRC_DIR}/SurfaceMapper.cpp"
+    "${SRC_DIR}/Viewer.cpp"
+    "${SRC_DIR}/ViewerProjector.cpp"
+    "${SRC_DIR}/VtkActorCreator.cpp"
+    "${SRC_DIR}/VtkScalingActor.cpp"
+    "${SRC_DIR}/VtkVectorField.cpp"
+    "${SRC_DIR}/VtkTools.cpp"
     )
 
 add_library( ${PROJECT_NAME} ${SRC_FILES} ${INCLUDE_FILES})

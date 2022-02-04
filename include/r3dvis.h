@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 #include "r3dvis/KeyPresser.h"
 #include "r3dvis/LookupTable.h"
 #include "r3dvis/OffscreenMeshViewer.h"
-#include "r3dvis/PointPlacer.h"
 #include "r3dvis/RendererPicker.h"
 #include "r3dvis/ScalarLegend.h"
 #include "r3dvis/SurfaceMapper.h"

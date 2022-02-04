@@ -9,7 +9,7 @@ Download [libbuild](https://github.com/richeytastic/libbuild) for easy build and
 
 - [VTK](http://www.vtk.org)
 
-  Requires VTK version 9.0.1+
+  Requires VTK version 9.1.0+
   For integration with [QTools](../../../QTools), it's necessary to ensure VTK references
   the installed Qt5 distribution. When configuring VTK with CMake, ensure that `WITH_QT` is
   checked and that the correct Qt5 import libraries are being referenced. Importantly, if
