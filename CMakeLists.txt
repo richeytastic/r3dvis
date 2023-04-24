@@ -4,6 +4,7 @@ project( r3dvis)
 
 set( WITH_RIMG TRUE)
 set( WITH_R3D TRUE)
+set( WITH_ZLIB TRUE)
 set( WITH_VTK TRUE)
 include( "cmake/FindLibs.cmake")
 
